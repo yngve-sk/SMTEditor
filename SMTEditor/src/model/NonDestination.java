@@ -2,7 +2,7 @@ package model;
 
 public class NonDestination extends SMTNode{
 
-    public NonDestination() {
-        super(false);
+    public NonDestination(double x, double y) {
+        super(x, y, false);
     }
 }

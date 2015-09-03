@@ -52,6 +52,7 @@ public class SMTView extends ScrollPane {
         this.setOnMouseEntered(event -> mouseEntered());
         this.setOnMouseExited(event -> mouseExited());
         this.setOnMouseClicked(event -> mouseClicked(event));
+        this.setOnMouseMoved(event -> mouseOver(event));
 
         this.getChildren().add(content);
  }
@@ -169,10 +170,16 @@ public class SMTView extends ScrollPane {
         }
     }
 
+    private void mouseOver(MouseEvent me) {
+        Point2D contentLoc = scrollPaneToContent(me.getX(), me.getY());
+        content.mouseOver(contentLoc);
+        System.out.println("MOUESEOVER");
+    }
+
     public void componentSelectionDidChange(Components componentType) {
         content.componentSelectionDidChange(componentType);
         cursor = componentType;
-        updateCursorForComponentType();
+     //   updateCursorForComponentType();
     }
 
 }

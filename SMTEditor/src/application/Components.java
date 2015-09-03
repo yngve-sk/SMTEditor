@@ -19,6 +19,10 @@ public enum Components {
         this.description = description;
     }
 
+    public boolean isNode() {
+        return this == DESTINATION || this == NONDESTINATION;
+    }
+
     public String getImagePath() {
         return this.imagePath;
     }

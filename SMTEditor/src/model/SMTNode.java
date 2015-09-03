@@ -25,7 +25,10 @@ public abstract class SMTNode {
 	 * Initializes a new node
 	 * @param isDestination
 	 */
-	public SMTNode(boolean isDestination) {
+	public SMTNode(double x, double y, boolean isDestination) {
+	    this.x = x;
+	    this.y = y;
+
 	    this.isDestination = isDestination;
 	}
 

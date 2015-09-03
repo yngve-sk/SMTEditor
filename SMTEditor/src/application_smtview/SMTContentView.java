@@ -11,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Line;
 import model.SMTNode;
+import model.SMTNodeFactory;
 import model.SharedMulticastTree;
 import application.Components;
 
@@ -34,6 +35,10 @@ public class SMTContentView extends Group {
     private double currentDimension;
     private double currentNodeDimension;
 
+    private ImageView phantom;
+    private Image destination;
+    private Image nonDestination;
+
     private StatsView statsPopup;
 
     public SMTContentView() {
@@ -51,6 +56,14 @@ public class SMTContentView extends Group {
         imgView.setFitWidth(maxDimension);
         imgView.setFitHeight(maxDimension);
 
+        destination = new Image(Components.DESTINATION.getImagePath());
+        nonDestination = new Image(Components.NONDESTINATION.getImagePath());
+
+        phantom = new ImageView();
+        phantom.setOpacity(0.5);
+
+        getChildren().add(phantom);
+        phantom.setVisible(false);
     }
 
     public void draw(SharedMulticastTree tree) {
@@ -178,10 +191,45 @@ public class SMTContentView extends Group {
 
     public void componentSelectionDidChange(Components componentType) {
         this.componentType = componentType;
+        if(componentType.isNode()) {
+            phantom.setImage(componentType == Components.DESTINATION ? destination : nonDestination);
+            phantom.setVisible(true);
+        }
+        else
+            phantom.setVisible(false);
+    }
+
+    public void mouseOver(Point2D coordinate) {
+        if(!phantom.isVisible())
+            return;
+        phantom.relocate(coordinate.getX(), coordinate.getY());
     }
 
     public void mouseClicked(Point2D coordinate) {
+        double x = coordinate.getX();
+        double y = coordinate.getY();
+        if(componentType == Components.CURSOR) {
 
+        }
+        else if(componentType == Components.DESTINATION) {
+            SMTNode newNode = SMTNodeFactory.newNode(
+                    transformCoordinateValueFromVisualToModel(x),
+                    transformCoordinateValueFromVisualToModel(y), true);
+
+            SMTNodeView view = SMTNodeViewFactory.nodeView(x, y, currentNodeDimension, currentNodeDimension, newNode, true);
+            getChildren().add(view);
+        }
+        else if(componentType == Components.NONDESTINATION) {
+            SMTNode newNode = SMTNodeFactory.newNode(
+                    transformCoordinateValueFromVisualToModel(x),
+                    transformCoordinateValueFromVisualToModel(y), false);
+
+            SMTNodeView view = SMTNodeViewFactory.nodeView(x, y, currentNodeDimension, currentNodeDimension, newNode, false);
+            getChildren().add(view);
+        }
+        else if(componentType == Components.LINK) {
+
+        }
     }
 
 }
