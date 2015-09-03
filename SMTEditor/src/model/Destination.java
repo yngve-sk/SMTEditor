@@ -1,6 +1,6 @@
 package model;
 
-public class Destination extends Node{
+public class Destination extends SMTNode{
 
     public Destination() {
         super(true); // true since it's a destination

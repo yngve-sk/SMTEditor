@@ -1,8 +1,15 @@
 package application;
 
-import javafx.scene.Parent;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.text.TextAlignment;
 import model.SharedMulticastTree;
+import application_smtview.SMTView;
 
 @SuppressWarnings("unused")
 
@@ -13,7 +20,7 @@ public class SMTEditor extends Scene {
     private SMTView editor; // displays the tree itself
     private SMTComponentView components; // displays components that can be dragged into editor
     private TextOutputView output; // displays stats for tree
-    private ButtonsView buttons; // displays buttons
+    private ControlsView buttons; // displays buttons
 
     /* Layout in percentages, going through width-wise first */
     // Content width
@@ -35,7 +42,7 @@ public class SMTEditor extends Scene {
     private final double verticalInternalPaddingRatio = 0.04; // There is only one vertical internal padding
 
     // Components view width and height
-    private final double componentsWidthRatio = 1 - editorWidthRatio - horizontalPaddingBetweenEditorAndComponentsRatio;
+    private final double componentsWidthRatio = 1 - editorWidthRatio - horizontalPaddingBetweenEditorAndComponentsRatio - 2*horizontalEdgePaddingRatio;
     private final double componentsHeightRatio = editorHeightRatio; // same height but written for clarity/future modification
 
     // Buttons view width and height
@@ -47,14 +54,48 @@ public class SMTEditor extends Scene {
     private final double outputViewHeightRatio = buttonsViewHeightRatio; // might be modified later
 
 
-    public SMTEditor(Parent root, double width, double height) {
+    private Slider zoom; /* Modifies the degree of zoom within the scroll pane */
+    private Label zoomLabel; /* Shows degree of zoom */
+
+    private final double zoomXRatio = 0.60; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
+    private final double zoomWidthRatio = 0.30; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
+    private final double zoomYRatio = 0.08; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
+    private final double zoomHeight = 30;
+
+    public SMTEditor(Group root, double width, double height) {
         super(root, width, height);
+        System.out.println("New SMTEditor, width = " + width + ", height = " + height);
         editor = new SMTView();
         components = new SMTComponentView();
-        buttons = new ButtonsView();
+        buttons = new ControlsView();
         output = new TextOutputView();
 
+        zoom = new Slider();
+        zoom.setMin(10);
+        zoom.setMax(200);
+        zoom.setValue(100);
+
+        zoomLabel = new Label("100%");
+        zoomLabel.setAlignment(Pos.BASELINE_CENTER);
+        zoomLabel.setTextAlignment(TextAlignment.CENTER);
+
+        zoom.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> ov,
+                    Number old_val, Number new_val) {
+                    SMTEditor.this.zoomDidChange(new_val.intValue());
+                }
+            });
+
         layoutSubviews(width, height); // layout logic separated for autoresizing behavior
+
+        root.getChildren().addAll(editor, components, buttons, output, zoom, zoomLabel);
+    }
+
+    private void zoomDidChange(int newPercentageValue) {
+        System.out.println("Zoom changed, new percentage!!! = " + newPercentageValue);
+        zoomLabel.setText(newPercentageValue + "%");
+        editor.zoomDidChange(newPercentageValue);
     }
 
     /**
@@ -71,6 +112,9 @@ public class SMTEditor extends Scene {
         double editorWidth = editorWidthRatio*width;
         double editorHeight = editorHeightRatio*height;
 
+        double zoomX = editorX + editorWidth*zoomXRatio;
+        double zoomY = editorY + editorHeight*zoomYRatio;
+        double zoomWidth = editorWidth*zoomWidthRatio;
 
         double componentsX = editorX + editorWidth + width*horizontalPaddingBetweenEditorAndComponentsRatio;
         double componentsY = editorY;
@@ -97,6 +141,8 @@ public class SMTEditor extends Scene {
         components.resizeRelocate(componentsX, componentsY, componentsWidth, componentsHeight);
         buttons.resizeRelocate(buttonsX, buttonsY, buttonsWidth, buttonsHeight);
         output.resizeRelocate(outputX, outputY, outputWidth, outputHeight);
+        zoom.resizeRelocate(zoomX, zoomY, zoomWidth, zoomHeight);
+        zoomLabel.resizeRelocate(zoomX + zoomWidth*0.15, zoomY + zoomHeight, zoomWidth, zoomHeight);
     }
 
 

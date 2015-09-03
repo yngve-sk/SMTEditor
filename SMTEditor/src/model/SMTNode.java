@@ -2,14 +2,14 @@ package model;
 
 import java.util.List;
 
-public abstract class Node {
+public abstract class SMTNode {
 
 	private double highestPowerLevel, lowestPowerLevel;
 	private double nodeCost;
 	private double x, y;
 
 	private boolean isDestination;
-	private List<Node> neighborsWithinRange;
+	private List<SMTNode> neighborsWithinRange;
 
 	/**
 	 * Resets all data on this node (cost, neighbours within range, highest and second highest power level)
@@ -25,8 +25,17 @@ public abstract class Node {
 	 * Initializes a new node
 	 * @param isDestination
 	 */
-	public Node(boolean isDestination) {
+	public SMTNode(boolean isDestination) {
 	    this.isDestination = isDestination;
+	}
+
+	/**
+	 *
+	 * @return
+	 *     a string representation of the nodes position in form (x,y)
+	 */
+	public String getPosition() {
+	    return "(" + x + ", " + y + ")";
 	}
 
 	/**
@@ -38,11 +47,15 @@ public abstract class Node {
 	    return isDestination;
 	}
 
+	public String getType() {
+	   return isDestination ? "Destination" : "Non-Destination";
+	}
+
 	/**
 	 * Stores the neighbour list in the node
 	 * @param neighborsWithinRange
 	 */
-	public void setNeighbors(List<Node> neighborsWithinRange) {
+	public void setNeighbors(List<SMTNode> neighborsWithinRange) {
 	    this.neighborsWithinRange = neighborsWithinRange;
 	}
 
@@ -51,7 +64,7 @@ public abstract class Node {
 	 * @return
 	 *     the neighbours within range currently stored in this node
 	 */
-	public List<Node> getNeighboursWithinRange() {
+	public List<SMTNode> getNeighboursWithinRange() {
 	    return this.neighborsWithinRange;
 	}
 
@@ -74,15 +87,15 @@ public abstract class Node {
 	    this.nodeCost = nodeCost;
 	}
 
-	double getHighestPowerLevel() {
+	public double getHighestPowerLevel() {
         return this.highestPowerLevel;
     }
 
-	double getLowestPowerLevel() {
+	public double getSecondHighestPowerLevel() {
         return this.lowestPowerLevel;
     }
 
-	double getNodeCost() {
+	public double getNodeCost() {
 	    return this.nodeCost;
 	}
 
