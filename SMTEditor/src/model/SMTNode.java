@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class SMTNode {
@@ -10,6 +11,10 @@ public abstract class SMTNode {
 
 	private boolean isDestination;
 	private List<SMTNode> neighborsWithinRange;
+	private List<SMTLink> allLinks = new ArrayList<SMTLink>(); // this is implicit in neighbors, but it's a way to
+	                                                     // store the results instead of having a huge structure in the GUI
+
+	private boolean linksAreUpdated = false; // a node might have 0 links so isEmpty/null checking isn't sufficent
 
 	/**
 	 * Resets all data on this node (cost, neighbours within range, highest and second highest power level)
@@ -19,6 +24,22 @@ public abstract class SMTNode {
 	    this.nodeCost = 0;
 	    this.highestPowerLevel = 0;
 	    this.lowestPowerLevel = 0;
+	    allLinks.clear();
+	    linksAreUpdated = false;
+	}
+
+	/**
+	 * Gets all the links. This might return an empty list, that would mean the node has no neighbors / no links.
+	 * @return
+	 *     all the links
+	 */
+	public List<SMTLink> getAllLinks() {
+	    if(!linksAreUpdated) {
+	        for(SMTNode neighbor : neighborsWithinRange)
+	            allLinks.add(new SMTLink(this, neighbor, !isDestination));
+	        linksAreUpdated = true;
+	    }
+	    return allLinks;
 	}
 
 	/**

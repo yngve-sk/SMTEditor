@@ -168,7 +168,6 @@ public class SMTView extends ScrollPane {
     private void mouseOver(MouseEvent me) {
         Point2D contentLoc = scrollPaneToContent(me.getX(), me.getY());
         content.mouseOver(contentLoc);
-        System.out.println("MOUESEOVER");
     }
 
     public void componentSelectionDidChange(Components componentType) {

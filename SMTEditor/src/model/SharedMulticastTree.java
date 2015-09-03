@@ -14,7 +14,7 @@ public class SharedMulticastTree {
 	private List<SMTNode> nodes;
 	private boolean[][] links;
 	private double cost;
-	private List<Link> distinctLinks;
+	private List<SMTLink> distinctLinks;
 
 	/**
 	 * Initializes a SMT
@@ -26,7 +26,7 @@ public class SharedMulticastTree {
 	public SharedMulticastTree(List<SMTNode> nodes, boolean[][] links) {
 		this.nodes = nodes;
 		this.links = links;
-		this.distinctLinks = new ArrayList<Link>();
+		this.distinctLinks = new ArrayList<SMTLink>();
 
 		recalculate();
 	}

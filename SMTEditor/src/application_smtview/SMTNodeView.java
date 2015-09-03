@@ -1,7 +1,9 @@
 package application_smtview;
 
+import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import model.SMTNode;
 
 /**
@@ -22,6 +24,41 @@ public abstract class SMTNodeView extends ImageView {
 
         this.setOnMouseEntered(event -> mouseEntered());
         this.setOnMouseExited(event -> mouseExited());
+        this.setOnMouseDragged(event -> mouseDragged(event));
+        this.setOnMouseReleased(event -> mouseDragReleased(event));
+
+    }
+
+
+    private void mouseDragReleased(MouseEvent event) {
+        getContentView().nodeWasDragged(this);
+    }
+
+
+    private void mouseDragged(MouseEvent event) {
+        double dx = event.getX();
+        double dy = event.getY();
+
+        Point2D d = this.localToParent(dx, dy); // dx and dy is subtracted to emulate the node being clicked at its anchor
+        double x = d.getX();
+        double y = d.getY();
+
+
+//        System.out.println("x = " + x + ", dx = " + dx);
+//        System.out.println("y = " + y + ", dy = " + dy);
+//
+//        final double xdx = x - dx;
+//        final double ydy = y - dy;
+//
+//        System.out.println("xdx = " + xdx);
+//        System.out.println("ydy = " + ydy);
+
+        this.relocate(x, y);
+    }
+
+    public void syncData(double nodeX, double nodeY) {
+        node.setX(nodeX);
+        node.setY(nodeY);
     }
 
     @Override
@@ -33,13 +70,11 @@ public abstract class SMTNodeView extends ImageView {
 
     private void mouseEntered() {
         getContentView().showStatsPopup(node, this.getLayoutX(), this.getLayoutY());
-        System.out.println("MouseEntered!!!");
     }
 
     private void mouseExited() {
         getContentView().hideStatsPopup();
-        System.out.println("MouseExited!!!");
-  }
+    }
 
     private SMTContentView getContentView() {
         return (SMTContentView) this.getParent();

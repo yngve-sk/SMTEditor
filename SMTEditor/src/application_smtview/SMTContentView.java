@@ -1,5 +1,6 @@
 package application_smtview;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javafx.collections.ObservableList;
@@ -10,6 +11,7 @@ import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Line;
+import model.SMTLink;
 import model.SMTNode;
 import model.SMTNodeFactory;
 import model.SharedMulticastTree;
@@ -28,7 +30,11 @@ public class SMTContentView extends Group {
     private SharedMulticastTree tree;
     private Components componentType;
 
-    private final double maxDimension = 5000;
+    private final double maxDimension = 5000; /* TODO some of this "extra" data might be redundant...
+                                               * was supposed to be used to custom zooming,
+                                               * but using scale seems to work fine for now...
+                                               */
+
     private final double referenceDimension = 1000; // TODO might need to be fit to default input dimension
     private final double referenceNodeDimension = 25;
 
@@ -42,8 +48,12 @@ public class SMTContentView extends Group {
     private Image nonDestination;
 
     private double nodeScale = 1;
+    private boolean isDragging = false;
+    private SMTNodeView beingDragged;
 
     private StatsView statsPopup;
+
+    private HashMap<SMTLinkView, SMTLink> linkDictionary; // quick lookup of clicked links
 
     public SMTContentView() {
         currentDimension = referenceDimension;
@@ -55,7 +65,6 @@ public class SMTContentView extends Group {
         this.resize(maxDimension, maxDimension);
         this.setBlendMode(BlendMode.DARKEN);
         background = new ImageView(new Image("images/background.jpg"));
-        this.getChildren().add(background);
         background.autosize();
         background.setFitWidth(maxDimension);
         background.setFitHeight(maxDimension);
@@ -65,19 +74,32 @@ public class SMTContentView extends Group {
 
         phantom = new ImageView();
         phantom.setOpacity(0.5);
-
-        getChildren().add(phantom);
         phantom.setVisible(false);
+
+        getChildren().addAll(background, phantom);
     }
+
 
     public void draw(SharedMulticastTree tree) {
 
         ObservableList<Node> children = getChildren();
 
         children.clear();
+        children.add(background);
         this.tree = tree;
 
         List<SMTNode> nodes = tree.getNodes();
+
+        for(SMTNode n : nodes) { // 1. Draw up all the links since they will be "under" the nodes
+            Point2D start = nodeCoordinatesToVisual(n);
+            for(SMTLink l : n.getAllLinks()) {
+                Point2D dest = nodeCoordinatesToVisual(l.target);
+                SMTLinkView view = new SMTLinkView(start, dest, l.isRelayOnly);
+
+                linkDictionary.put(view, l);
+                children.add(view);
+            }
+        }
 
         for(SMTNode n : nodes) { // translate all nodes into views, render them and add to content view
             double visualX = transformCoordinateValueFromModelToVisual(n.getX());
@@ -89,15 +111,16 @@ public class SMTContentView extends Group {
                     n, n.isDestination());
 
             children.add(view);
-
-            Line l = new Line();
         }
-
-        for(SMTNode n : nodes) {
-
-        }
-
     }
+
+    private Point2D nodeCoordinatesToVisual(SMTNode node) {
+        return new Point2D(transformCoordinateValueFromModelToVisual(node.getX()),
+                           transformCoordinateValueFromModelToVisual(node.getY())
+                           );
+    }
+
+
 /* adding lines underneath instead of all this
     private Line getLineBetween(SMTNode node, SMTNode neighbor) {
 
@@ -201,10 +224,10 @@ public class SMTContentView extends Group {
     }
 
     public void mouseOver(Point2D coordinate) {
-        if(!phantom.isVisible())
-            return;
-        phantom.relocate(coordinate.getX(), coordinate.getY());
+        if(phantom.isVisible())
+            phantom.relocate(coordinate.getX(), coordinate.getY());
     }
+
 
     public void zoomDidChange(int percentage) {
         double previousNodeScale = nodeScale;
@@ -245,10 +268,28 @@ public class SMTContentView extends Group {
         else if(componentType == Components.LINK) {
 
         }
+
+        if(componentType.isNode() && tree == null) {
+            // TODO if there is no tree, create a new SMT here...
+        }
     }
 
     private double getCurrentNodeDimension() {
         return currentNodeDimension*nodeScale;
     }
+
+
+    public void nodeWasDragged(SMTNodeView node) {
+        // Update the data
+        node.syncData(transformCoordinateValueFromVisualToModel(node.getX()), node.getY());
+        // Recalculate data
+        double time = tree.recalculate(); // TODO pass time up in hierarchy for display...
+        // Redraw tree
+        draw(tree);
+    }
+
+
+
+
 
 }
