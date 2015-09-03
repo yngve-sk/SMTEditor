@@ -13,7 +13,7 @@ import javafx.scene.shape.Line;
 import model.SMTNode;
 import model.SMTNodeFactory;
 import model.SharedMulticastTree;
-import application.Components;
+import application__componentview.Components;
 
 
 @SuppressWarnings("unused")
@@ -35,9 +35,13 @@ public class SMTContentView extends Group {
     private double currentDimension;
     private double currentNodeDimension;
 
+    private ImageView background;
+
     private ImageView phantom;
     private Image destination;
     private Image nonDestination;
+
+    private double nodeScale = 1;
 
     private StatsView statsPopup;
 
@@ -50,11 +54,11 @@ public class SMTContentView extends Group {
 
         this.resize(maxDimension, maxDimension);
         this.setBlendMode(BlendMode.DARKEN);
-        ImageView imgView = new ImageView(new Image(Components.LINK.getImagePath()));
-        this.getChildren().add(imgView);
-        imgView.autosize();
-        imgView.setFitWidth(maxDimension);
-        imgView.setFitHeight(maxDimension);
+        background = new ImageView(new Image("images/background.jpg"));
+        this.getChildren().add(background);
+        background.autosize();
+        background.setFitWidth(maxDimension);
+        background.setFitHeight(maxDimension);
 
         destination = new Image(Components.DESTINATION.getImagePath());
         nonDestination = new Image(Components.NONDESTINATION.getImagePath());
@@ -173,10 +177,7 @@ public class SMTContentView extends Group {
      * @param sender
      *      the node to be displayed
      */
-    void showStatsPopup(SMTNode sender) {
-        double x = transformCoordinateValueFromModelToVisual(sender.getX());
-        double y = transformCoordinateValueFromModelToVisual(sender.getY());
-
+    void showStatsPopup(SMTNode sender, double x, double y) {
         statsPopup.relocate(x, y);
         statsPopup.displayNode(sender);
         statsPopup.setVisible(true);
@@ -205,31 +206,49 @@ public class SMTContentView extends Group {
         phantom.relocate(coordinate.getX(), coordinate.getY());
     }
 
-    public void mouseClicked(Point2D coordinate) {
-        double x = coordinate.getX();
-        double y = coordinate.getY();
+    public void zoomDidChange(int percentage) {
+        double previousNodeScale = nodeScale;
+        nodeScale = (1.0*percentage/100.0);
+        double ratio = nodeScale/previousNodeScale;
+
+        for(Node n : getChildren())
+            if(n instanceof SMTNodeView) {
+                double x = n.getLayoutX()*ratio;
+                double y = n.getLayoutY()*ratio;
+                double width = n.getLayoutBounds().getWidth()*ratio;
+                double height = n.getLayoutBounds().getHeight()*ratio;
+
+                n.resizeRelocate(x, y, width, height);
+            }
+    }
+
+    public void mouseClicked() {
         if(componentType == Components.CURSOR) {
 
         }
         else if(componentType == Components.DESTINATION) {
             SMTNode newNode = SMTNodeFactory.newNode(
-                    transformCoordinateValueFromVisualToModel(x),
-                    transformCoordinateValueFromVisualToModel(y), true);
+                    transformCoordinateValueFromVisualToModel(phantom.getLayoutX()),
+                    transformCoordinateValueFromVisualToModel(phantom.getLayoutY()), true);
 
-            SMTNodeView view = SMTNodeViewFactory.nodeView(x, y, currentNodeDimension, currentNodeDimension, newNode, true);
+            SMTNodeView view = SMTNodeViewFactory.nodeView(phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(), getCurrentNodeDimension(), newNode, true);
             getChildren().add(view);
         }
         else if(componentType == Components.NONDESTINATION) {
             SMTNode newNode = SMTNodeFactory.newNode(
-                    transformCoordinateValueFromVisualToModel(x),
-                    transformCoordinateValueFromVisualToModel(y), false);
+                    transformCoordinateValueFromVisualToModel(phantom.getLayoutX()),
+                    transformCoordinateValueFromVisualToModel(phantom.getLayoutY()), false);
 
-            SMTNodeView view = SMTNodeViewFactory.nodeView(x, y, currentNodeDimension, currentNodeDimension, newNode, false);
+            SMTNodeView view = SMTNodeViewFactory.nodeView(phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(), getCurrentNodeDimension(), newNode, false);
             getChildren().add(view);
         }
         else if(componentType == Components.LINK) {
 
         }
+    }
+
+    private double getCurrentNodeDimension() {
+        return currentNodeDimension*nodeScale;
     }
 
 }

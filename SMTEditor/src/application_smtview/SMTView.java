@@ -7,7 +7,7 @@ import javafx.scene.ImageCursor;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
-import application.Components;
+import application__componentview.Components;
 
 /**
  * Contains the SMTContentView
@@ -59,10 +59,7 @@ public class SMTView extends ScrollPane {
 
     private void mouseClicked(MouseEvent e) {
         System.out.println("CLICKED");
-        double parentX = e.getX();
-        double parentY = e.getY();
-
-        content.mouseClicked(scrollPaneToContent(parentX, parentY));
+        content.mouseClicked();
 
 //        System.out.println("e coords : " + e.getX() + ", " + e.getY());
 //        System.out.println("content.parentToLocal : " + content.parentToLocal(parentX, parentY));
@@ -147,9 +144,7 @@ public class SMTView extends ScrollPane {
      * @param newPercentageValue
      */
     public void zoomDidChange(int newPercentageValue) {
-        double scale = newPercentageValue/100.0;
-        content.setScaleX(scale);
-        content.setScaleY(scale);
+        content.zoomDidChange(newPercentageValue);
     }
 
     private void updateCursorForComponentType() {

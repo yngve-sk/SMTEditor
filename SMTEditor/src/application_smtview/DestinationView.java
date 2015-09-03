@@ -1,7 +1,7 @@
 package application_smtview;
 
 import model.SMTNode;
-import application.Components;
+import application__componentview.Components;
 
 
 /**

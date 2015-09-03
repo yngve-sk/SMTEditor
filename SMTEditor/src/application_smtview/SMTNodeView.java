@@ -32,12 +32,14 @@ public abstract class SMTNodeView extends ImageView {
     }
 
     private void mouseEntered() {
-        getContentView().showStatsPopup(node);
+        getContentView().showStatsPopup(node, this.getLayoutX(), this.getLayoutY());
+        System.out.println("MouseEntered!!!");
     }
 
     private void mouseExited() {
         getContentView().hideStatsPopup();
-    }
+        System.out.println("MouseExited!!!");
+  }
 
     private SMTContentView getContentView() {
         return (SMTContentView) this.getParent();

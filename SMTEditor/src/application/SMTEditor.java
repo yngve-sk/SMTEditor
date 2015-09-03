@@ -9,6 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.text.TextAlignment;
 import model.SharedMulticastTree;
+import application__componentview.SMTComponentView;
 import application_smtview.SMTView;
 
 @SuppressWarnings("unused")
@@ -72,7 +73,7 @@ public class SMTEditor extends Scene {
 
         zoom = new Slider();
         zoom.setMin(10);
-        zoom.setMax(200);
+        zoom.setMax(125);
         zoom.setValue(100);
 
         zoomLabel = new Label("100%");

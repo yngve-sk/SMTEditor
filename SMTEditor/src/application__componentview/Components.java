@@ -1,4 +1,4 @@
-package application;
+package application__componentview;
 
 /**
  * Keeps track of the different types of components, their description and image URI
