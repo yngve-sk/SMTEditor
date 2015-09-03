@@ -10,7 +10,6 @@ import javafx.scene.Node;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.shape.Line;
 import model.SMTLink;
 import model.SMTNode;
 import model.SMTNodeFactory;
@@ -139,12 +138,12 @@ public class SMTContentView extends Group {
         return l;
     }
 */
-    /**
+     /**
      * Displaces and shortens the line by one diameter, towards the end point.
      * @param l
      *      the line containing the coordinates
      */
-    private void adaptLineToFit(Line l) {
+/*      private void adaptLineToFit(Line l) {
         // Displace start and end points towards each other by 1 radius
         double angle = getAngleRelativeToHorizontalPlane(l);
 
@@ -175,7 +174,7 @@ public class SMTContentView extends Group {
         return dest - src;
     }
 
-
+*/
 
 
     private double transformCoordinateValueFromModelToVisual(double modelValue) {

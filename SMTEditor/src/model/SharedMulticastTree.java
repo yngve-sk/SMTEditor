@@ -3,6 +3,8 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.geometry.Point2D;
+
 @SuppressWarnings("unused")
 /**
  * Represents a shared multicast tree
@@ -12,21 +14,39 @@ import java.util.List;
 public class SharedMulticastTree {
 
 	private List<SMTNode> nodes;
-	private boolean[][] links;
 	private double cost;
 	private List<SMTLink> distinctLinks;
 
 	/**
 	 * Initializes a SMT
 	 * @param nodes
-	 *     the list of sMTNodes
+	 *     the list of nodes, destinations placed before non-destinations
 	 * @param links
-	 *     the adjacency matrix containing all the links
+	 *     the list of the nodes neighbor lists, must be of same length as nodes and correspond to the nodes list.
+	 * @param numberOfDestinations
+	 *     number of destinations
 	 */
-	public SharedMulticastTree(List<SMTNode> nodes, boolean[][] links) {
-		this.nodes = nodes;
-		this.links = links;
-		this.distinctLinks = new ArrayList<SMTLink>();
+	public SharedMulticastTree(List<Point2D> nodes, List<List<Integer>> links, int numberOfDestinations) throws IllegalArgumentException {
+	    if(nodes.size() != links.size())
+	        throw new IllegalArgumentException("Amount of nodes and amount of neighbor lists must be of same length, nodes.size() = " + nodes.size() + ", links.size() = " + links.size());
+
+	    if(numberOfDestinations > nodes.size())
+	        throw new IllegalArgumentException("Number of destination = " + numberOfDestinations + ", number of nodes = " + nodes.size());
+
+		this.nodes = new ArrayList<SMTNode>();
+
+		int i = 0;
+		for(Point2D p : nodes)
+		    this.nodes.add(SMTNodeFactory.newNode(p.getX(), p.getY(), i++ < numberOfDestinations));
+
+		i = 0;
+		for(SMTNode n : this.nodes) {
+		    List<SMTNode> neighbors = new ArrayList<SMTNode>();
+		    for(Integer j : links.get(i++))
+		        neighbors.add(this.nodes.get(j));
+
+		    n.setNeighbors(neighbors);
+		}
 
 		recalculate();
 	}
@@ -65,7 +85,7 @@ public class SharedMulticastTree {
         double start = System.currentTimeMillis();
 
         for(SMTNode n : nodes) {
-            n.setNeighbors(getNodesLinkedTo(n));
+//          n.setNeighbors(links.get(nodes.indexOf(n)));
             n.setPowerLevels(getPowerLevels(n));
             n.setNodeCost(getCost(n));
         }
@@ -85,10 +105,7 @@ public class SharedMulticastTree {
      *      yes if n1 and n2 is linked together
      */
 	private boolean isLinked(SMTNode n1, SMTNode n2) {
-	    int indexOfNode1 = nodes.indexOf(n1);
-	    int indexOfNode2 = nodes.indexOf(n2);
-
-	    return links[indexOfNode1][indexOfNode2] || links[indexOfNode2][indexOfNode1];
+	    return n1.getNeighboursWithinRange().contains(n2);
 	}
 
 	/**
@@ -137,9 +154,13 @@ public class SharedMulticastTree {
 	 * @return
 	 *  	The power cost of the transmission
 	 */
-	private int powerCost(SMTNode sender, SMTNode receiver) {
-		// TODO
-		return 0;
+	private double powerCost(SMTNode sender, SMTNode receiver) {
+	    double lx = receiver.getX() - sender.getX();
+	    double ly = receiver.getY() - sender.getY();
+
+	    double dist = Math.sqrt(Math.pow(lx, 2) + Math.pow(ly, 2));
+
+		return dist;
 	}
 
 //	/**
@@ -207,16 +228,16 @@ public class SharedMulticastTree {
 	 * @return
 	 *     the cost of n
 	 */
-	private int getCost(SMTNode n) {
+	private double getCost(SMTNode n) {
 		int numberOfDestinationsSubtree = arc(n).sMTNodes.size();
 
 		SMTNode[] mostDistantN = mostDistant(n);
-		int costMostDistant = powerCost(n, mostDistantN[1]);
-		int costSecondMostDistant = powerCost(n, mostDistantN[0]);
+		double costMostDistant = powerCost(n, mostDistantN[1]);
+		double costSecondMostDistant = powerCost(n, mostDistantN[0]);
 
 		int numberOfDestinationsTree = nodes.size() - numberOfDestinationsSubtree; // TODO not sure if right
 
-		int result = numberOfDestinationsSubtree*costSecondMostDistant + numberOfDestinationsTree*costMostDistant;
+		double result = numberOfDestinationsSubtree*costSecondMostDistant + numberOfDestinationsTree*costMostDistant;
 
 		return result;
 	}

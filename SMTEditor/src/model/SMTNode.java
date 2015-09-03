@@ -139,5 +139,54 @@ public abstract class SMTNode {
         this.y = y;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        long temp;
+        temp = Double.doubleToLongBits(highestPowerLevel);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        result = prime * result + (isDestination ? 1231 : 1237);
+        result = prime * result + (linksAreUpdated ? 1231 : 1237);
+        temp = Double.doubleToLongBits(lowestPowerLevel);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(nodeCost);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(x);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(y);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override // not taking neighbor list and all links list into consideration for performance
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SMTNode other = (SMTNode) obj;
+        if (Double.doubleToLongBits(highestPowerLevel) != Double
+                .doubleToLongBits(other.highestPowerLevel))
+            return false;
+        if (isDestination != other.isDestination)
+            return false;
+        if (linksAreUpdated != other.linksAreUpdated)
+            return false;
+        if (Double.doubleToLongBits(lowestPowerLevel) != Double
+                .doubleToLongBits(other.lowestPowerLevel))
+            return false;
+        if (Double.doubleToLongBits(nodeCost) != Double
+                .doubleToLongBits(other.nodeCost))
+            return false;
+        if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))
+            return false;
+        if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
+            return false;
+        return true;
+    }
+
 
 }
