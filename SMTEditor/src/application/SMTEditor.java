@@ -66,7 +66,7 @@ public class SMTEditor extends Scene {
         super(root, width, height);
         System.out.println("New SMTEditor, width = " + width + ", height = " + height);
         editor = new SMTView();
-        components = new SMTComponentView();
+        components = new SMTComponentView(editor);
         buttons = new ControlsView();
         output = new TextOutputView();
 

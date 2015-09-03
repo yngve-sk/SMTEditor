@@ -3,6 +3,7 @@ package application_smtview;
 import java.util.List;
 
 import javafx.collections.ObservableList;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.effect.BlendMode;
@@ -24,6 +25,7 @@ import application.Components;
 public class SMTContentView extends Group {
 
     private SharedMulticastTree tree;
+    private Components componentType;
 
     private final double maxDimension = 5000;
     private final double referenceDimension = 1000; // TODO might need to be fit to default input dimension
@@ -48,6 +50,7 @@ public class SMTContentView extends Group {
         imgView.autosize();
         imgView.setFitWidth(maxDimension);
         imgView.setFitHeight(maxDimension);
+
     }
 
     public void draw(SharedMulticastTree tree) {
@@ -73,8 +76,12 @@ public class SMTContentView extends Group {
             Line l = new Line();
         }
 
-    }
+        for(SMTNode n : nodes) {
 
+        }
+
+    }
+/* adding lines underneath instead of all this
     private Line getLineBetween(SMTNode node, SMTNode neighbor) {
 
         // 1. Get inital coordinates
@@ -91,7 +98,7 @@ public class SMTContentView extends Group {
 
         return l;
     }
-
+*/
     /**
      * Displaces and shortens the line by one diameter, towards the end point.
      * @param l
@@ -167,6 +174,14 @@ public class SMTContentView extends Group {
      */
     void hideStatsPopup() {
         statsPopup.setVisible(false);
+    }
+
+    public void componentSelectionDidChange(Components componentType) {
+        this.componentType = componentType;
+    }
+
+    public void mouseClicked(Point2D coordinate) {
+
     }
 
 }

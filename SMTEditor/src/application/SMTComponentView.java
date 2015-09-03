@@ -2,6 +2,7 @@ package application;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
+import application_smtview.SMTView;
 
 /**
  * Displays components used to built a SMT.
@@ -17,17 +18,26 @@ public class SMTComponentView extends Group {
     private SMTComponent nonDestination;
     private SMTComponent destination;
     private SMTComponent link;
+    private SMTComponent select;
+
+    private SMTView editor;
 
     /**
      * Initiate a component view, this should only be called once during initialization of the GUI
      */
-	public SMTComponentView() {
-	    this.nonDestination = new SMTComponent(Components.NONDESTINATION.getImagePath(), Components.NONDESTINATION.getDescription());
-	    this.destination = new SMTComponent(Components.DESTINATION.getImagePath(), Components.DESTINATION.getDescription());
-	    this.link = new SMTComponent(Components.LINK.getImagePath(), Components.LINK.getDescription());
+	public SMTComponentView(SMTView editor) {
+	    nonDestination = new SMTComponent(Components.NONDESTINATION);
+	    destination = new SMTComponent(Components.DESTINATION);
+	    link = new SMTComponent(Components.LINK);
+	    select = new SMTComponent(Components.CURSOR);
 
-	    this.getChildren().addAll(nonDestination, destination, link);
+	    select.select(); // this is the initial selected type
+
+	    this.getChildren().addAll(select, nonDestination, destination, link);
+	    this.editor = editor;
 	}
+
+
 
 	@Override
     public void resizeRelocate(double x, double y, double width, double height) {
@@ -49,6 +59,22 @@ public class SMTComponentView extends Group {
 	    for(Node n : this.getChildren())
 	        n.resizeRelocate(0, cellNumber++*cellHeight, width, cellHeight);
 	}
+
+
+	/**
+	 * Called when an icon was selected, unselects all icons but the source,
+	 * ensuring only one item can be selected at a time
+	 * @param source
+	 */
+    public void iconWasSelected(SMTComponent source) {
+        SMTComponent[] components = {select, nonDestination, destination, link};
+
+        for(SMTComponent c : components)
+            if(c != source)
+                c.unselect();
+
+        editor.componentSelectionDidChange(source.getComponentType());
+    }
 }
 
 

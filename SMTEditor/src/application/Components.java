@@ -8,7 +8,8 @@ package application;
 public enum Components {
     DESTINATION("images/destination.png", "Non-Destination"),
     NONDESTINATION("images/nondestination.png", "Destination"),
-    LINK("images/link.png", "Link");
+    LINK("images/link.png", "Link"),
+    CURSOR("images/cursor.png", "Select");
 
     private String imagePath;
     private String description;
