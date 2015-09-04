@@ -1,10 +1,15 @@
 package application_smtview;
 
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.effect.BlendMode;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import model.SMTNode;
 
 /**
@@ -12,7 +17,7 @@ import model.SMTNode;
  * @author Yngve Sekse Kristiansen
  *
  */
-public class StatsView extends Group {
+public class StatsView extends Region {
 
     private Label cost;
     private Label type;
@@ -26,14 +31,25 @@ public class StatsView extends Group {
     private final String POWER_TWO_STR = "2nd Highest Power Level: ";
     private final String POSITION_STR = "Position: ";
 
-    private double width = 150;
-    private double height = 200;
+    private final double width = 150;
+    private final double height = 150;
+    private ImageView background;
 
     /**
      * Initiates a new stats view
      */
     public StatsView() {
         super();
+
+//        background = new ImageView(new Image("images/statsviewbackground.jpg"));
+//        background.setFitWidth(width);
+//        background.setFitHeight(height);
+
+        BackgroundFill fill = new BackgroundFill(Color.BLACK, new CornerRadii(5), new Insets(-8, -8, -8, -8));
+        Background background = new Background(fill);
+        this.setBackground(background);
+
+        this.setOpacity(0.8);
 
         cost = new Label();
         type = new Label();
@@ -44,11 +60,15 @@ public class StatsView extends Group {
         position = new Label();
 
         Label[] allLabels = {cost, type, powerLevelOne, powerLevelTwo, position};
-        for(Label l : allLabels)
+        for(Label l : allLabels) {
             l.setAlignment(Pos.BASELINE_CENTER);
+            l.setTextFill(Color.SNOW);
+        }
 
-        this.setBlendMode(BlendMode.SRC_OVER);
         getChildren().addAll(allLabels);
+
+        this.resizeRelocate(0, 0, width, height);
+        this.setVisible(false);
     }
 
     /**
@@ -62,6 +82,7 @@ public class StatsView extends Group {
         powerLevelOne.setText(POWER_ONE_STR + node.getHighestPowerLevel());
         powerLevelTwo.setText(POWER_TWO_STR + node.getSecondHighestPowerLevel());
         position.setText(POSITION_STR + node.getPosition());
+        this.setVisible(true);
     }
 
     @Override
@@ -82,6 +103,6 @@ public class StatsView extends Group {
         int cellNumber = 0;
         for(Node n : getChildren())
             n.resizeRelocate(0, cellNumber++*cellHeight, cellWidth, cellHeight);
-        // TODO font resizing?
+
     }
 }

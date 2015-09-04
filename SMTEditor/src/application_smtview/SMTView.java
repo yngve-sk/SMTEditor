@@ -30,7 +30,7 @@ public class SMTView extends ScrollPane {
      * Initializes a new SMTView
      */
     public SMTView() {
-        content = new SMTContentView();
+        content = new SMTContentView(this);
         this.setContent(content);
 
         cursor = Components.CURSOR;
@@ -174,6 +174,19 @@ public class SMTView extends ScrollPane {
         content.componentSelectionDidChange(componentType);
         cursor = componentType;
      //   updateCursorForComponentType();
+    }
+
+    private double hScrollCache = 0;
+    private double vScrollCache = 0;
+
+    public void cacheScroll() {
+        hScrollCache = this.getHvalue();
+        vScrollCache = this.getVvalue();
+    }
+
+    public void restoreScrollFromCache() {
+        setHvalue(hScrollCache);
+        setVvalue(vScrollCache);
     }
 
 }

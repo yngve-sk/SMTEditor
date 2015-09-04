@@ -52,10 +52,13 @@ public class SMTContentView extends Group {
     private SMTNodeView beingDragged;
 
     private StatsView statsPopup;
+    private SMTView parent;
 
     private HashMap<SMTLinkView, SMTLink> linkDictionary; // quick lookup of clicked links
 
-    public SMTContentView() {
+
+    public SMTContentView(SMTView parent) {
+        this.parent = parent;
         currentDimension = referenceDimension;
         currentNodeDimension = referenceNodeDimension;
 
@@ -76,7 +79,7 @@ public class SMTContentView extends Group {
         phantom.setOpacity(0.5);
         phantom.setVisible(false);
 
-        getChildren().addAll(background, phantom);
+        getChildren().addAll(background, phantom, statsPopup);
     }
 
 
@@ -183,7 +186,7 @@ public class SMTContentView extends Group {
     }
 
     private double modelToVisual() {
-        return currentDimension/referenceDimension;
+        return nodeScale*currentDimension/referenceDimension;
     }
 
 
@@ -193,7 +196,7 @@ public class SMTContentView extends Group {
     }
 
     private double visualToModel() {
-        return referenceDimension/currentDimension;
+        return referenceDimension/(currentDimension*nodeScale);
     }
 
     /**
@@ -202,9 +205,26 @@ public class SMTContentView extends Group {
      *      the node to be displayed
      */
     void showStatsPopup(SMTNode sender, double x, double y) {
-        statsPopup.relocate(x, y);
+        double dx = 0;
+        double dy = 0;
+
+        Point2D parentCoords = this.localToParent(x, y);
+        double parentMidX = parent.getWidth()/2;
+        double parentMidY = parent.getHeight()/2;
+
+        if(parentMidX - x < 0) // on the right side, move left
+            dx = -1*statsPopup.getWidth() - getCurrentNodeDimension();
+        else // x on left side, displace only by node dim
+            dx = getCurrentNodeDimension();
+
+        if(parentMidY - y < 0) // y on the lower side, move up
+            dy = -1*statsPopup.getHeight() - getCurrentNodeDimension();
+        else // move down by node dim
+            dy = getCurrentNodeDimension();
+
+        statsPopup.relocate(x + dx, y + dy);
         statsPopup.displayNode(sender);
-        statsPopup.setVisible(true);
+        statsPopup.toFront();
     }
 
     /**
@@ -291,21 +311,26 @@ public class SMTContentView extends Group {
      * @param node
      *      the node being dragged, its data should contain updated coordinates
      */
-    public void nodeWasDragged(SMTNodeView node) {
+    public void nodeWasDragged(SMTNodeView node, double x, double y) {
         // Update the data
-        node.updateModelCoordinates(transformCoordinateValueFromVisualToModel(node.getX()), transformCoordinateValueFromVisualToModel(node.getY()));
         int index = tree.getNodes().indexOf(node.getData());
         System.out.println("tree node coords BEFORE: (" + tree.getNodes().get(index).getX() + ", " + tree.getNodes().get(index).getY() + ")");
 
+        node.updateModelCoordinates(transformCoordinateValueFromVisualToModel(x), transformCoordinateValueFromVisualToModel(y));
         tree.relocateNode(node.getData());
+
         System.out.println("data node coords: (" + node.getData().getX() + ", " + node.getData().getY() + ")");
         System.out.println("tree node coords AFTER: (" + tree.getNodes().get(index).getX() + ", " + tree.getNodes().get(index).getY() + ")");
+    }
 
+    public void nodeWasDroppedAfterDragMove(SMTNodeView node) {
         // Recalculate data
         double time = tree.recalculate(); // TODO pass time up in hierarchy for display...
         System.out.println("recalculation took " + time + "!");
-        // Redraw tree
+        // Redraw tree, cache scroll position
+        parent.cacheScroll();
         draw(tree);
+        parent.restoreScrollFromCache();
     }
 
 

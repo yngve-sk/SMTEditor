@@ -22,8 +22,8 @@ public abstract class SMTNodeView extends ImageView {
 
         this.node = node;
 
-        this.setOnMouseEntered(event -> mouseEntered());
-        this.setOnMouseExited(event -> mouseExited());
+        this.setOnMouseEntered(event -> mouseEntered(event));
+        this.setOnMouseExited(event -> mouseExited(event));
         this.setOnMouseDragged(event -> mouseDragged(event));
         this.setOnMouseReleased(event -> mouseDragReleased(event));
 
@@ -31,15 +31,14 @@ public abstract class SMTNodeView extends ImageView {
 
 
     private void mouseDragReleased(MouseEvent event) {
-        getContentView().nodeWasDragged(this);
+        System.out.println("mouseDragReleased... x = " + event.getX() + ", y = " + event.getY());
+        getContentView().nodeWasDroppedAfterDragMove(this);
     }
 
 
     private void mouseDragged(MouseEvent event) {
-        double dx = event.getX();
-        double dy = event.getY();
 
-        Point2D d = this.localToParent(dx, dy); // dx and dy is subtracted to emulate the node being clicked at its anchor
+        Point2D d = localToParent(event); // dx and dy is subtracted to emulate the node being clicked at its anchor
         double x = d.getX();
         double y = d.getY();
 
@@ -52,8 +51,12 @@ public abstract class SMTNodeView extends ImageView {
 //
 //        System.out.println("xdx = " + xdx);
 //        System.out.println("ydy = " + ydy);
-
+        getContentView().nodeWasDragged(this, x, y);
         this.relocate(x, y);
+    }
+
+    private Point2D localToParent(MouseEvent me) {
+        return this.localToParent(me.getX(), me.getY());
     }
 
     @Override
@@ -63,11 +66,13 @@ public abstract class SMTNodeView extends ImageView {
         this.setFitHeight(height);
     }
 
-    private void mouseEntered() {
-        getContentView().showStatsPopup(node, this.getLayoutX(), this.getLayoutY());
+    private void mouseEntered(MouseEvent me) {
+        Point2D parentCoords = localToParent(me);
+        System.out.println("mouseEntered at (" + parentCoords.getX() + ", " + parentCoords.getY() + ")");
+        getContentView().showStatsPopup(node, parentCoords.getX(), parentCoords.getY());
     }
 
-    private void mouseExited() {
+    private void mouseExited(MouseEvent me) {
         getContentView().hideStatsPopup();
     }
 
@@ -83,7 +88,7 @@ public abstract class SMTNodeView extends ImageView {
     public void updateModelCoordinates(
             double modelX,
             double modelY) {
-        System.out.println("x y = (" + modelX + ", " + modelY + ")");
+        System.out.println("updateModelCoordinates x y = (" + modelX + ", " + modelY + ")");
         node.setX(modelX);
         node.setY(modelY);
     }
