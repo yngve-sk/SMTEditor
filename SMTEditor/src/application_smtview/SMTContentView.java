@@ -10,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import model.SMTFactory;
 import model.SMTLink;
 import model.SMTNode;
 import model.SMTNodeFactory;
@@ -88,7 +89,7 @@ public class SMTContentView extends Group {
         this.tree = tree;
 
         List<SMTNode> nodes = tree.getNodes();
-
+        System.out.println("Tree.getNodes() = " + nodes.size());
         for(SMTNode n : nodes) { // 1. Draw up all the links since they will be "under" the nodes
             Point2D start = nodeCoordinatesToVisual(n);
             for(SMTLink l : n.getAllLinks()) {
@@ -187,6 +188,7 @@ public class SMTContentView extends Group {
 
 
     private double transformCoordinateValueFromVisualToModel(double visualValue) {
+        System.out.println("transforming visual value " + visualValue + ", multiplying by " + visualToModel());
         return visualValue*visualToModel();
     }
 
@@ -245,6 +247,13 @@ public class SMTContentView extends Group {
     }
 
     public void mouseClicked() {
+
+        // If a node is placed and the tree is null, init a new tree
+        if(componentType.isNode() && tree == null) {
+            tree = SMTFactory.emptyTree();
+            System.out.println("New tree created, node placed");
+        }
+
         if(componentType == Components.CURSOR) {
 
         }
@@ -252,6 +261,7 @@ public class SMTContentView extends Group {
             SMTNode newNode = SMTNodeFactory.newNode(
                     transformCoordinateValueFromVisualToModel(phantom.getLayoutX()),
                     transformCoordinateValueFromVisualToModel(phantom.getLayoutY()), true);
+            tree.addNode(newNode);
 
             SMTNodeView view = SMTNodeViewFactory.nodeView(phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(), getCurrentNodeDimension(), newNode, true);
             getChildren().add(view);
@@ -260,6 +270,7 @@ public class SMTContentView extends Group {
             SMTNode newNode = SMTNodeFactory.newNode(
                     transformCoordinateValueFromVisualToModel(phantom.getLayoutX()),
                     transformCoordinateValueFromVisualToModel(phantom.getLayoutY()), false);
+            tree.addNode(newNode);
 
             SMTNodeView view = SMTNodeViewFactory.nodeView(phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(), getCurrentNodeDimension(), newNode, false);
             getChildren().add(view);
@@ -268,9 +279,6 @@ public class SMTContentView extends Group {
 
         }
 
-        if(componentType.isNode() && tree == null) {
-            // TODO if there is no tree, create a new SMT here...
-        }
     }
 
     private double getCurrentNodeDimension() {
@@ -278,11 +286,24 @@ public class SMTContentView extends Group {
     }
 
 
+    /**
+     * Called when a node is done being dragged
+     * @param node
+     *      the node being dragged, its data should contain updated coordinates
+     */
     public void nodeWasDragged(SMTNodeView node) {
         // Update the data
-        node.syncData(transformCoordinateValueFromVisualToModel(node.getX()), node.getY());
+        node.updateModelCoordinates(transformCoordinateValueFromVisualToModel(node.getX()), transformCoordinateValueFromVisualToModel(node.getY()));
+        int index = tree.getNodes().indexOf(node.getData());
+        System.out.println("tree node coords BEFORE: (" + tree.getNodes().get(index).getX() + ", " + tree.getNodes().get(index).getY() + ")");
+
+        tree.relocateNode(node.getData());
+        System.out.println("data node coords: (" + node.getData().getX() + ", " + node.getData().getY() + ")");
+        System.out.println("tree node coords AFTER: (" + tree.getNodes().get(index).getX() + ", " + tree.getNodes().get(index).getY() + ")");
+
         // Recalculate data
         double time = tree.recalculate(); // TODO pass time up in hierarchy for display...
+        System.out.println("recalculation took " + time + "!");
         // Redraw tree
         draw(tree);
     }

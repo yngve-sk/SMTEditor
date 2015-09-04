@@ -5,6 +5,9 @@ import java.util.List;
 
 public abstract class SMTNode {
 
+    private static int idCount = 0;
+
+    private final int id;
 	private double highestPowerLevel, lowestPowerLevel;
 	private double nodeCost;
 	private double x, y;
@@ -17,15 +20,24 @@ public abstract class SMTNode {
 	private boolean linksAreUpdated = false; // a node might have 0 links so isEmpty/null checking isn't sufficent
 
 	/**
-	 * Resets all data on this node (cost, neighbours within range, highest and second highest power level)
+	 * Resets data on this node (cost, highest and second highest power level), and recalculates links
 	 */
-	void flushData() {
-	    this.neighborsWithinRange = null;
+	void resetData() {
 	    this.nodeCost = 0;
 	    this.highestPowerLevel = 0;
 	    this.lowestPowerLevel = 0;
 	    allLinks.clear();
-	    linksAreUpdated = false;
+	    updateLinks();
+    }
+
+	private void updateLinks() {
+        linksAreUpdated = false;
+        this.getAllLinks(); // recalculates
+	}
+
+	public void checkState() {
+	    assert neighborsWithinRange != null;
+	    assert allLinks != null;
 	}
 
 	/**
@@ -51,6 +63,10 @@ public abstract class SMTNode {
 	    this.y = y;
 
 	    this.isDestination = isDestination;
+
+	    allLinks = new ArrayList<SMTLink>();
+
+	    this.id = idCount++;
 	}
 
 	/**
@@ -139,54 +155,46 @@ public abstract class SMTNode {
         this.y = y;
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        long temp;
-        temp = Double.doubleToLongBits(highestPowerLevel);
-        result = prime * result + (int) (temp ^ (temp >>> 32));
-        result = prime * result + (isDestination ? 1231 : 1237);
-        result = prime * result + (linksAreUpdated ? 1231 : 1237);
-        temp = Double.doubleToLongBits(lowestPowerLevel);
-        result = prime * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(nodeCost);
-        result = prime * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(x);
-        result = prime * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(y);
-        result = prime * result + (int) (temp ^ (temp >>> 32));
-        return result;
-    }
 
     @Override // not taking neighbor list and all links list into consideration for performance
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
         SMTNode other = (SMTNode) obj;
-        if (Double.doubleToLongBits(highestPowerLevel) != Double
-                .doubleToLongBits(other.highestPowerLevel))
-            return false;
-        if (isDestination != other.isDestination)
-            return false;
-        if (linksAreUpdated != other.linksAreUpdated)
-            return false;
-        if (Double.doubleToLongBits(lowestPowerLevel) != Double
-                .doubleToLongBits(other.lowestPowerLevel))
-            return false;
-        if (Double.doubleToLongBits(nodeCost) != Double
-                .doubleToLongBits(other.nodeCost))
-            return false;
-        if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))
-            return false;
-        if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
-            return false;
-        return true;
+        return this.id == other.id;
     }
 
+    /**
+     * Adds a neighbor to the node
+     * @param neighbor
+     *      the node
+     */
+    public void addNeighbor(SMTNode neighbor) {
+        neighborsWithinRange.add(neighbor);
+        linksAreUpdated = false;
+    }
+
+    /**
+     * Removes a neighbor from the node
+     * @param node
+     */
+    public void removeNeighbor(SMTNode node) {
+        int index = neighborsWithinRange.indexOf(node);
+        if(index == -1) // not found
+            return;
+
+        neighborsWithinRange.remove(index);
+        linksAreUpdated = false;
+    }
+
+    /**
+     * Relocates a node
+     * @param x
+     *      the new x coordinate
+     * @param y
+     *      the new y coordinate
+     */
+    public void relocate(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
 
 }

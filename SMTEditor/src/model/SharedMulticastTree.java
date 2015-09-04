@@ -51,6 +51,32 @@ public class SharedMulticastTree {
 		recalculate();
 	}
 
+	// TODO add node to all neighbors of node?
+	public void addNode(SMTNode node) {
+	    nodes.add(node);
+//	    for(SMTNode neighbor : node.getNeighboursWithinRange())
+//	        neighbor.getNeighboursWithinRange().add(node);
+	}
+
+	/**
+	 * Adds a link to the tree
+	 * @param l
+	 *     the link
+	 */
+	public void addLink(SMTLink l) {
+	    l.source.addNeighbor(l.target);
+	}
+
+	/**
+	 * Removes a node from the tree
+	 * @param node
+	 *     the node
+	 */
+	public void removeNode(SMTNode node) {
+	    nodes.remove(node);
+	    for(SMTNode n : nodes)
+	        n.removeNeighbor(node);
+	}
 
 	/**
 	 *
@@ -78,9 +104,7 @@ public class SharedMulticastTree {
 	 */
     public double recalculate() {
         for(SMTNode n : nodes)
-            n.flushData();
-
-        distinctLinks.clear();
+            n.resetData();
 
         double start = System.currentTimeMillis();
 
@@ -120,8 +144,8 @@ public class SharedMulticastTree {
 
 	    // 2. Calculate distance between n and all sMTNodes, store highest two distances
 	    PowerFilter filter = new PowerFilter(); // run all distances through filter, highest two will remain
-	    for(SMTNode sMTNode : linked)
-	        filter.runThroughFilter(getDistanceBetween(n, sMTNode));
+	    for(SMTNode node : linked)
+	        filter.runThroughFilter(getDistanceBetween(n, node));
 
 	    return filter.getHighestTwo();
 	}
@@ -182,28 +206,21 @@ public class SharedMulticastTree {
 	 */
 	private Subtree arc(SMTNode sender, SMTNode receiver) {
 
-		List<SMTNode> nodesWithinSendersRange = nodesWithinRange(sender);
+		List<SMTNode> nodesWithinSendersRange = sender.getNeighboursWithinRange();
 		int indexOfReceiver = nodesWithinSendersRange.indexOf(sender);
 
 		return new Subtree(nodesWithinSendersRange.subList(0, indexOfReceiver));
 	}
 
-
 	/**
+	 * Gets the subtree of a node
 	 * @param n
-	 *  	the node
 	 * @return
-	 *  	The sMTNodes within range of node n. The closest node
-	 * 		will be at index 0, whilst the node furthest away will be at
-	 * 		the last index.
 	 */
-	private List<SMTNode> nodesWithinRange(SMTNode n) {
-		// TODO
-		return null;
-	}
-
 	private Subtree arc(SMTNode n) {
-		List<SMTNode> receivers = nodesWithinRange(n);
+		List<SMTNode> receivers = n.getNeighboursWithinRange();
+		if(receivers.isEmpty())
+		    return new Subtree();
 		SMTNode receiver = receivers.get(receivers.size() - 1);
 		return arc(n, receiver);
 	}
@@ -212,13 +229,26 @@ public class SharedMulticastTree {
 	 *
 	 * @param n
 	 * @return
-	 *  	the two most distant sMTNodes, the most distant at index 1, second most distant at index 0
+	 *  	the two most distant nodes, the most distant at index 1, second most distant at index 0
 	 */
-	private SMTNode[] mostDistant(SMTNode n) {
-		List<SMTNode> withinRange = nodesWithinRange(n);
+	private SMTNode[] twoMostDistant(SMTNode n) {
+		List<SMTNode> withinRange = n.getNeighboursWithinRange();
 		int size = withinRange.size();
 
-		SMTNode[] mostDistant = {withinRange.get(size - 2), withinRange.get(size - 1)};
+		SMTNode[] mostDistant = {null, null};
+
+		if(size == 1) {
+		    mostDistant[1] = withinRange.get(0);
+		}
+
+
+		if(size > 1) {
+		    NodeNeighborDistanceFilter filter = new NodeNeighborDistanceFilter(n);
+		    for(SMTNode neighbor : withinRange)
+		        filter.runThroughFilter(neighbor);
+
+		    return filter.getTwoMostDistantNodes();
+		}
 		return mostDistant;
 	}
 
@@ -229,9 +259,12 @@ public class SharedMulticastTree {
 	 *     the cost of n
 	 */
 	private double getCost(SMTNode n) {
-		int numberOfDestinationsSubtree = arc(n).sMTNodes.size();
+		int numberOfDestinationsSubtree = arc(n).size();
 
-		SMTNode[] mostDistantN = mostDistant(n);
+		if(numberOfDestinationsSubtree == 0)
+		    return 0;
+
+		SMTNode[] mostDistantN = twoMostDistant(n);
 		double costMostDistant = powerCost(n, mostDistantN[1]);
 		double costSecondMostDistant = powerCost(n, mostDistantN[0]);
 
@@ -258,24 +291,28 @@ public class SharedMulticastTree {
 	 *
 	 */
 	private class Subtree {
-		private List<SMTNode> sMTNodes;
+		private List<SMTNode> nodes;
 
 		/**
 		 * Initializes a new subtree
-		 * @param sMTNodes
+		 * @param nodes
 		 *    the list of sMTNodes, can't be null or empty
 		 */
-		public Subtree(List<SMTNode> sMTNodes) {
-			this.sMTNodes = sMTNodes;
+		public Subtree(List<SMTNode> nodes) {
+			this.nodes = nodes;
 		}
 
-		/**
+		public Subtree() {
+		    // empty subtree
+		}
+
+        /**
 		 *
 		 * @return
 		 *    The number of sMTNodes in the tree
 		 */
 		int size() {
-		    return sMTNodes.size();
+		    return (nodes == null) ? 0 : nodes.size();
 		}
 	}
 
@@ -323,4 +360,79 @@ public class SharedMulticastTree {
 	        return highestTwo;
 	    }
 	}
+
+	/**
+	 * Utility to help find the two most distant neighbors of a node
+	 * @author Yngve Sekse Kristiansen
+	 *
+	 */
+	private class NodeNeighborDistanceFilter {
+
+	    private SMTNode origin;
+
+	    private SMTNode furthest;
+	    private double furthestDistance;
+
+	    private SMTNode nextFurthest;
+	    private double nextFurthestDistance;
+
+	    /**
+	     * Initializes a new filter, taking in origin node
+	     * @param origin
+	     */
+	    public NodeNeighborDistanceFilter(SMTNode origin) {
+	        this.origin = origin;
+	    }
+
+	    public SMTNode[] getTwoMostDistantNodes() {
+	        SMTNode[] twoMostDistant = {nextFurthest, furthest};
+            return twoMostDistant;
+        }
+
+        /**
+	     * Runs a node through the filter, retains it if its distance is greater than the next biggest
+	     * distance currently being retained
+	     * @param neighbor
+	     *     the neighbor
+	     */
+	    public void runThroughFilter(SMTNode neighbor) {
+	        if(furthest == null) {
+	            furthest = neighbor;
+	            furthestDistance = distanceTo(neighbor);
+	        }
+	        else if(nextFurthest == null) {
+	            nextFurthest = neighbor;
+	            furthestDistance = distanceTo(neighbor);
+	        }
+
+	        double dist = distanceTo(neighbor);
+
+	        if(dist > furthestDistance) {
+	            furthest = neighbor;
+	            furthestDistance = dist;
+	        }
+	        else if(dist < nextFurthestDistance && dist < furthestDistance) {
+	            nextFurthest = neighbor;
+	            nextFurthestDistance = dist;
+	        }
+	    }
+
+	    private double distanceTo(SMTNode neighbor) {
+	        double dx = neighbor.getX() - origin.getX();
+	        double dy = neighbor.getY() - origin.getY();
+
+	        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+	    }
+	}
+
+	/**
+	 * Called when a node is relocated visually, this transfers
+	 * the new coordinates onto the node in the tree.
+	 * @param data
+	 *     the updated data object
+	 */
+    public void relocateNode(SMTNode data) {
+        int index = nodes.indexOf(data);
+        nodes.get(index).relocate(data.getX(), data.getY());
+    }
 }

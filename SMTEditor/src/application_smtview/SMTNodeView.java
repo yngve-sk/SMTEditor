@@ -56,11 +56,6 @@ public abstract class SMTNodeView extends ImageView {
         this.relocate(x, y);
     }
 
-    public void syncData(double nodeX, double nodeY) {
-        node.setX(nodeX);
-        node.setY(nodeY);
-    }
-
     @Override
     public void resizeRelocate(double x, double y, double width, double height) {
         super.resizeRelocate(x, y, width, height);
@@ -78,5 +73,18 @@ public abstract class SMTNodeView extends ImageView {
 
     private SMTContentView getContentView() {
         return (SMTContentView) this.getParent();
+    }
+
+    public SMTNode getData() {
+        return node;
+    }
+
+
+    public void updateModelCoordinates(
+            double modelX,
+            double modelY) {
+        System.out.println("x y = (" + modelX + ", " + modelY + ")");
+        node.setX(modelX);
+        node.setY(modelY);
     }
 }
