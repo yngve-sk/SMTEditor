@@ -15,6 +15,7 @@ public class Main extends Application {
 
 		    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
+
 		    SMTEditor editorScene = new SMTEditor(new Group(),  screenSize.width,  screenSize.height);
 			primaryStage.setScene(editorScene);
 			primaryStage.show();
