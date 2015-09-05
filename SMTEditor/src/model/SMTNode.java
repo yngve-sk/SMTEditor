@@ -5,6 +5,8 @@ import java.util.List;
 
 public abstract class SMTNode {
 
+    private int sortingId; // Used when finding subtree
+
     public final int id;
 	private double highestPowerLevel, lowestPowerLevel;
 	private double nodeCost;
@@ -192,4 +194,11 @@ public abstract class SMTNode {
         this.y = y;
     }
 
+    public int getSortingId() {
+        return sortingId;
+    }
+
+    public void setSortingId(int sortingId) {
+        this.sortingId = sortingId;
+    }
 }

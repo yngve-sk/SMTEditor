@@ -293,24 +293,8 @@ public class SharedMulticastTree {
 //		return sender.getNeighboursWithinRange().contains(receiver);
 //	}
 
-	/**
-	 *
-	 * @param id1
-	 * @param id2
-	 * @return
-	 */
-	private Subtree arc(int id1, int id2) {
-	    return null; // TODO
-	}
 
-	/**
-	 * Gets the subtree of a node
-	 * @param id
-	 * @return
-	 */
-	private Subtree arc(int id) {
-	    return null; //TODO
-	}
+
 
 	/**
 	 *
@@ -341,13 +325,34 @@ public class SharedMulticastTree {
 	}
 
 	/**
+    *
+    * @param id1
+    * @param id2
+    * @return
+    */
+   private Subtree arc(int id1, int id2) {
+       return null; // TODO
+   }
+
+
+   /**
+    * Gets the subtree of a node
+    * @param id
+    * @return
+    */
+   private Subtree arc(int id) {
+       return null; // TODO
+   }
+
+
+	/**
 	 *
 	 * @param id
 	 * @return
 	 *     the cost of n
 	 */
 	private double getCost(int id) {
-	    return 0; // TODO arc etc
+	    return 0; // TODO
 	    /*
 		int numberOfDestinationsSubtree = arc(id).size();
 
@@ -362,7 +367,7 @@ public class SharedMulticastTree {
 
 		double result = numberOfDestinationsSubtree*costSecondMostDistant + numberOfDestinationsTree*costMostDistant;
 
-		return result;*/
+		return result; */
 	}
 
 	/**
