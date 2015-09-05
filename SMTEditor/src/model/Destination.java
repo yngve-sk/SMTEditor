@@ -2,9 +2,8 @@ package model;
 
 public class Destination extends SMTNode{
 
-    public Destination(double x, double y) {
-        super(x, y, true); // true since it's a destination
-        // TODO Auto-generated constructor stub
+    public Destination(double x, double y, int id) {
+        super(x, y, true, id);
     }
 
 }

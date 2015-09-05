@@ -1,5 +1,7 @@
 package application_smtview;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,12 +12,13 @@ import javafx.scene.Node;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import model.IdTracker;
 import model.SMTFactory;
 import model.SMTLink;
 import model.SMTNode;
-import model.SMTNodeFactory;
 import model.SharedMulticastTree;
-import application__componentview.Components;
+import utils.Dictionary;
+import application_componentview.Components;
 
 
 @SuppressWarnings("unused")
@@ -36,7 +39,7 @@ public class SMTContentView extends Group {
                                                */
 
     private final double referenceDimension = 1000; // TODO might need to be fit to default input dimension
-    private final double referenceNodeDimension = 25;
+    private final double referenceNodeDimension = 35;
 
     private double currentDimension;
     private double currentNodeDimension;
@@ -54,8 +57,8 @@ public class SMTContentView extends Group {
     private StatsView statsPopup;
     private SMTView parent;
 
-    private HashMap<SMTLinkView, SMTLink> linkDictionary; // quick lookup of clicked links
-
+    private Dictionary<SMTLink, SMTLinkView> linkDictionary;
+    private HashMap<Integer, SMTNodeView> nodeDictionary;
 
     public SMTContentView(SMTView parent) {
         this.parent = parent;
@@ -78,43 +81,64 @@ public class SMTContentView extends Group {
         phantom = new ImageView();
         phantom.setOpacity(0.5);
         phantom.setVisible(false);
+        phantom.setFitWidth(getCurrentNodeDimension());
+        phantom.setFitHeight(getCurrentNodeDimension());
+
+        linkDictionary = new Dictionary<SMTLink, SMTLinkView>();
+
+        nodeDictionary = new HashMap<Integer, SMTNodeView>();
+        componentType = Components.CURSOR;
 
         getChildren().addAll(background, phantom, statsPopup);
     }
 
 
-    public void draw(SharedMulticastTree tree) {
-
+    public void draw() {
         ObservableList<Node> children = getChildren();
-
         children.clear();
         children.add(background);
-        this.tree = tree;
 
-        List<SMTNode> nodes = tree.getNodes();
-        System.out.println("Tree.getNodes() = " + nodes.size());
-        for(SMTNode n : nodes) { // 1. Draw up all the links since they will be "under" the nodes
+        linkDictionary.clear();
+        nodeDictionary.clear();
+
+        Collection<SMTNode> nodes = tree.getNodes();
+
+        HashMap<Integer, Integer> endPointIds = new HashMap<Integer, Integer>();
+
+        double d = currentNodeDimension/2;
+        // Create views out of all the nodes and links
+        for(SMTNode n : nodes) {
             Point2D start = nodeCoordinatesToVisual(n);
-            for(SMTLink l : n.getAllLinks()) {
-                Point2D dest = nodeCoordinatesToVisual(l.target);
-                SMTLinkView view = new SMTLinkView(start, dest, l.isRelayOnly);
+            Point2D startCenter = start.add(d, d);
 
-                linkDictionary.put(view, l);
-                children.add(view);
+            SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, start, getCurrentNodeDimension(), n.isDestination);
+            nodeDictionary.put(n.id, view);
+
+            for(SMTNode neighbor : tree.getNeighborsOfNode(n.id)) {
+                Point2D end = nodeCoordinatesToVisual(neighbor);
+                Point2D endCenter = end.add(d, d);
+
+                SMTLink link = new SMTLink(n.id, neighbor.id);
+                if(!linkDictionary.containsKey(link)) {
+                    SMTLinkView linkView = SMTLinkViewFactory.newLinkView(startCenter, n.id, endCenter, neighbor.id);
+                    linkDictionary.put(link, linkView);
+
+                    view.addLink(neighbor.id, true);
+                    endPointIds.put(neighbor.id, n.id);
+                }
             }
         }
 
-        for(SMTNode n : nodes) { // translate all nodes into views, render them and add to content view
-            double visualX = transformCoordinateValueFromModelToVisual(n.getX());
-            double visualY = transformCoordinateValueFromModelToVisual(n.getY());
+        for(Integer i : endPointIds.keySet())
+            nodeDictionary.get(i).addLink(endPointIds.get(i), false);
 
-            SMTNodeView view = SMTNodeViewFactory.nodeView(
-                    visualX, visualY,
-                    referenceNodeDimension, referenceNodeDimension,
-                    n, n.isDestination());
+        // Add views to children
+        children.addAll(linkDictionary.values());
+        children.addAll(nodeDictionary.values());
 
-            children.add(view);
-        }
+        // Add stats popup
+        children.add(statsPopup);
+        // Done
     }
 
     private Point2D nodeCoordinatesToVisual(SMTNode node) {
@@ -191,7 +215,6 @@ public class SMTContentView extends Group {
 
 
     private double transformCoordinateValueFromVisualToModel(double visualValue) {
-        System.out.println("transforming visual value " + visualValue + ", multiplying by " + visualToModel());
         return visualValue*visualToModel();
     }
 
@@ -201,13 +224,13 @@ public class SMTContentView extends Group {
 
     /**
      * Shows the stats popup, makes it pop up on top of the node where it's displayed visually.
-     * @param sender
-     *      the node to be displayed
+     * @param senderId
+     *      the id of the node to be displayed
      */
-    void showStatsPopup(SMTNode sender, double x, double y) {
+    void showStatsPopup(int senderId, double x, double y) {
         double dx = 0;
         double dy = 0;
-
+        System.out.println("ShowStatsPopup!");
         Point2D parentCoords = this.localToParent(x, y);
         double parentMidX = parent.getWidth()/2;
         double parentMidY = parent.getHeight()/2;
@@ -223,7 +246,7 @@ public class SMTContentView extends Group {
             dy = getCurrentNodeDimension();
 
         statsPopup.relocate(x + dx, y + dy);
-        statsPopup.displayNode(sender);
+        statsPopup.displayNode(tree.getNode(senderId));
         statsPopup.toFront();
     }
 
@@ -235,6 +258,7 @@ public class SMTContentView extends Group {
     }
 
     public void componentSelectionDidChange(Components componentType) {
+        System.out.println("Component type changed... is now " + componentType);
         this.componentType = componentType;
         if(componentType.isNode()) {
             phantom.setImage(componentType == Components.DESTINATION ? destination : nonDestination);
@@ -245,7 +269,13 @@ public class SMTContentView extends Group {
     }
 
     public void mouseOver(Point2D coordinate) {
-        if(phantom.isVisible())
+        if(componentType == Components.LINK && isLinking) {
+        //  System.out.println("SMTContentView.mouseOver(" + coordinate.toString() + ")");
+            linkInProgress.setEndX(coordinate.getX());
+            linkInProgress.setEndY(coordinate.getY());
+            return;
+        }
+        if(phantom.isVisible()) // if a link is being made don't show phantom...
             phantom.relocate(coordinate.getX(), coordinate.getY());
     }
 
@@ -256,7 +286,7 @@ public class SMTContentView extends Group {
         double ratio = nodeScale/previousNodeScale;
 
         for(Node n : getChildren())
-            if(n instanceof SMTNodeView) {
+            if(n instanceof SMTNodeView || n == phantom) {
                 double x = n.getLayoutX()*ratio;
                 double y = n.getLayoutY()*ratio;
                 double width = n.getLayoutBounds().getWidth()*ratio;
@@ -264,73 +294,229 @@ public class SMTContentView extends Group {
 
                 n.resizeRelocate(x, y, width, height);
             }
+            else if(n instanceof SMTLinkView) {
+                SMTLinkView view = (SMTLinkView) n;
+                double sx = view.getStartX();
+                double sy = view.getStartY();
+
+                double dx = view.getEndX();
+                double dy = view.getEndY();
+
+                view.setStartX(sx*ratio);
+                view.setStartY(sy*ratio);
+
+                view.setEndX(dx*ratio);
+                view.setEndY(dy*ratio);
+            }
+
     }
 
-    public void mouseClicked() {
 
+    private boolean isLinking = false;
+    private SMTNodeView linkOrigin = null;
+    private SMTNodeView selectedNode;
+    private SMTLinkView linkInProgress;
+
+    /**
+     * Called every time the mouse enters a node, a reference to it is stored until it exits
+     * @param selected
+     *      the selected node
+     */
+    public void updateSelectedNode(SMTNodeView selected) {
+        selectedNode = selected;
+    }
+
+    /**
+     * Clears the selected node, this is called when the mouse exits a node
+     */
+    public void clearSelectedNode() {
+        selectedNode = null;
+    }
+
+    public void mouseClicked() { //System.out.println("SMTContentView.mouseClicked() ");
         // If a node is placed and the tree is null, init a new tree
         if(componentType.isNode() && tree == null) {
             tree = SMTFactory.emptyTree();
-            System.out.println("New tree created, node placed");
+         // System.out.println("New tree created, node placed");
         }
 
         if(componentType == Components.CURSOR) {
 
         }
-        else if(componentType == Components.DESTINATION) {
-            SMTNode newNode = SMTNodeFactory.newNode(
-                    transformCoordinateValueFromVisualToModel(phantom.getLayoutX()),
-                    transformCoordinateValueFromVisualToModel(phantom.getLayoutY()), true);
-            tree.addNode(newNode);
+        else if(componentType.isNode()) {
+            double modelX = transformCoordinateValueFromVisualToModel(phantom.getLayoutX());
+            double modelY = transformCoordinateValueFromVisualToModel(phantom.getLayoutY());
 
-            SMTNodeView view = SMTNodeViewFactory.nodeView(phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(), getCurrentNodeDimension(), newNode, true);
+            SMTNodeView view = SMTNodeViewFactory.newNodeView(IdTracker.getNextNodeId(),
+                    phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(),
+                    componentType == Components.DESTINATION);
+
+            tree.addNode(modelX, modelY, componentType == Components.DESTINATION,
+                    IdTracker.getNextNodeId(), null); // order of these two calls is important
+
             getChildren().add(view);
         }
-        else if(componentType == Components.NONDESTINATION) {
-            SMTNode newNode = SMTNodeFactory.newNode(
-                    transformCoordinateValueFromVisualToModel(phantom.getLayoutX()),
-                    transformCoordinateValueFromVisualToModel(phantom.getLayoutY()), false);
-            tree.addNode(newNode);
-
-            SMTNodeView view = SMTNodeViewFactory.nodeView(phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(), getCurrentNodeDimension(), newNode, false);
-            getChildren().add(view);
+        else if(componentType == Components.LINK) { //System.out.println("Component type is link... selected Node = " + selectedNode);
+            if(isLinking) { // A center node is set, link center node to selected node and isLinking to false
+                if(selectedNode == null) { // remove the node in progress and reset the stuff
+                  //System.out.println("selectedNode is null, reseting!");
+                    getChildren().remove(linkInProgress);
+                    resetLinkInProgress();
+                }
+                else
+                    anchorLinkTo(selectedNode);
+            }
+            else { // No center node is set, set center node to selected node and isLinking to true
+                if(selectedNode != null) // if null do nothing
+                    createLinkAtOrigin(selectedNode);
+            }
         }
-        else if(componentType == Components.LINK) {
+    }
 
-        }
+    /**
+     * Anchors the link "in progress" to the selected node, i.e the selected node will be the end point of the link.
+     * This also finalizes the node in progress and resets related fields
+     * @param selectedNode
+     */
+    private void anchorLinkTo(SMTNodeView selectedNode) {
+        double d = getCurrentNodeDimension()/2;
+        System.out.println("Anchoring link!");
+        Point2D coordinates = selectedNode.getCoordinatesWithinParent();
+        Point2D centerCoordinates = coordinates.add(d, d); // anchor at center of node
 
+        linkInProgress.setEndPoint(centerCoordinates, selectedNode.getNodeId());
+
+        // Add link to tree
+        updateTreeWithNewLink(linkInProgress);
+
+        // Reset link cache
+        resetLinkInProgress();
+
+        // Redraw now that tree is updated
+        draw();
+    }
+
+    /**
+     * This is called when a new link is added visually, this will update the
+     * tree model object so that it is synchronized with the view
+     * @param newLink
+     */
+    private void updateTreeWithNewLink(SMTLinkView newLink) {
+        tree.addLink(newLink.getStartId(), newLink.getEndId());
+    }
+
+    /**
+     * Resets the link cache
+     */
+    private void resetLinkInProgress() {
+        isLinking = false;
+        linkOrigin = null;
+        selectedNode = null;
+        linkInProgress = null;
+    }
+
+    /**
+     * Creates a "link in progress", it anchors its start and end point at origin, at the mouse moves, its end point
+     * will move with the mouse.
+     * @param origin
+     *      the origin anchor of the link
+     */
+    private void createLinkAtOrigin(SMTNodeView origin) {
+        System.out.println("SMTContentView.createLinkAtOrigin()");
+        double d = getCurrentNodeDimension()/2;
+
+        Point2D coordinates = origin.getCoordinatesWithinParent();
+        Point2D centerCoordinates = coordinates.add(d, d); // Anchor link at center of node
+
+        linkInProgress = SMTLinkViewFactory.newLinkInProgress(centerCoordinates, origin.getNodeId());
+
+        isLinking = true;
+        linkOrigin = origin;
+
+        getChildren().add(linkInProgress); // Add link to children
+        setZOrderUnderNodes(linkInProgress); // Make sure link isn't on top of nodes
+    }
+
+    /**
+     * Sets the node to the lowest Z-order, but still over the background
+     * @param node
+     */
+    private void setZOrderUnderNodes(Node node) {
+        node.toBack();
+        background.toBack();
     }
 
     private double getCurrentNodeDimension() {
         return currentNodeDimension*nodeScale;
     }
 
+    public boolean isDraggingNodesAllowed() {
+        return componentType == Components.CURSOR;
+    }
 
     /**
-     * Called when a node is done being dragged
+     * Called when a node is being dragged.
      * @param node
      *      the node being dragged, its data should contain updated coordinates
      */
     public void nodeWasDragged(SMTNodeView node, double x, double y) {
-        // Update the data
-        int index = tree.getNodes().indexOf(node.getData());
-        System.out.println("tree node coords BEFORE: (" + tree.getNodes().get(index).getX() + ", " + tree.getNodes().get(index).getY() + ")");
 
-        node.updateModelCoordinates(transformCoordinateValueFromVisualToModel(x), transformCoordinateValueFromVisualToModel(y));
-        tree.relocateNode(node.getData());
+        double modelX = transformCoordinateValueFromVisualToModel(x);
+        double modelY = transformCoordinateValueFromVisualToModel(y);
 
-        System.out.println("data node coords: (" + node.getData().getX() + ", " + node.getData().getY() + ")");
-        System.out.println("tree node coords AFTER: (" + tree.getNodes().get(index).getX() + ", " + tree.getNodes().get(index).getY() + ")");
+        tree.relocateNode(modelX, modelY, node.getNodeId());
+
+        double d = getCurrentNodeDimension()/2;
+
+        node.relocate(x + d, y + d);
+        relocateLinksConnectedToNode(node, x + d, y + d);
     }
 
-    public void nodeWasDroppedAfterDragMove(SMTNodeView node) {
+
+    /**
+     * Relocates all links connected to this node, they will relocate the end of the link that's connected to the node,
+     * to the nodes center coordinates.
+     * @param node
+     * @param x
+     * @param y
+     */
+    private void relocateLinksConnectedToNode(SMTNodeView node, double x, double y) {
+
+        List<SMTLink> linksOfNodeBeingDragged = node.getAllLinks();
+        System.out.println("node.getAllLinks.size() = " + linksOfNodeBeingDragged.size());
+        int i = 0;
+        for(SMTLink l : linksOfNodeBeingDragged) {
+            SMTLinkView view = linkDictionary.get(l);
+            if(node.isLinkStart(view.getLink())) {
+                view.setStartX(x);
+                view.setStartY(y);
+            }
+            else {
+                view.setEndX(x);
+                view.setEndY(y);
+            }
+        }
+    }
+
+    public void nodeWasDroppedAfterDragMove() {
+        if(!isDraggingNodesAllowed())
+            return;
+
         // Recalculate data
         double time = tree.recalculate(); // TODO pass time up in hierarchy for display...
         System.out.println("recalculation took " + time + "!");
         // Redraw tree, cache scroll position
         parent.cacheScroll();
-        draw(tree);
+        draw();
         parent.restoreScrollFromCache();
+    }
+
+
+    public List<SMTLinkView> getLinkViews(List<SMTLink> links) {
+        List<SMTLinkView> linkViews = new ArrayList<SMTLinkView>();
+        for(SMTLink l : links)
+            linkViews.add(linkDictionary.get(l));
+        return linkViews;
     }
 
 

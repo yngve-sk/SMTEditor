@@ -7,7 +7,7 @@ import javafx.scene.ImageCursor;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
-import application__componentview.Components;
+import application_componentview.Components;
 
 /**
  * Contains the SMTContentView

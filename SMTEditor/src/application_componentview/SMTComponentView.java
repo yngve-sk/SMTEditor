@@ -1,4 +1,4 @@
-package application__componentview;
+package application_componentview;
 
 import javafx.scene.Group;
 import javafx.scene.Node;

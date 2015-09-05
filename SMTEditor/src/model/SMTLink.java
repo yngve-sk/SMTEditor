@@ -8,19 +8,34 @@ package model;
  */
 public class SMTLink {
 
-    public final SMTNode source, target;
-    public final boolean isRelayOnly;
+    public final int id1, id2;
 
     /**
      * Initializes a new link
-     * @param n1
-     *      the origin node
-     * @param n2
-     *      the target node
+     * @param id1
+     *      id of node 1
+     * @param id2
+     *      id of node 2
      */
-    public SMTLink(SMTNode source, SMTNode target, boolean isRelayOnly) {
-        this.source = source;
-        this.target = target;
-        this.isRelayOnly = isRelayOnly;
+    public SMTLink(int id1, int id2) {
+        this.id1 = id1;
+        this.id2 = id2;
+    }
+
+    @Override
+    public String toString() {
+        return "[Link: " + id1 + "<---->" + id2 + "]";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SMTLink other = (SMTLink) obj;
+        return (this.id1 == other.id1 && this.id2 == other.id2) || (this.id1 == other.id2 && this.id2 == other.id1);
     }
 }

@@ -9,7 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.text.TextAlignment;
 import model.SharedMulticastTree;
-import application__componentview.SMTComponentView;
+import application_componentview.SMTComponentView;
 import application_smtview.SMTView;
 
 @SuppressWarnings("unused")

@@ -1,7 +1,11 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javafx.geometry.Point2D;
 
@@ -13,9 +17,9 @@ import javafx.geometry.Point2D;
  */
 public class SharedMulticastTree {
 
-	private List<SMTNode> nodes;
+	private HashMap<Integer, SMTNode> nodes;
 	private double cost;
-	private List<SMTLink> distinctLinks;
+	private Set<SMTLink> distinctLinks;
 
 	/**
 	 * Initializes a SMT
@@ -33,50 +37,120 @@ public class SharedMulticastTree {
 	    if(numberOfDestinations > nodes.size())
 	        throw new IllegalArgumentException("Number of destination = " + numberOfDestinations + ", number of nodes = " + nodes.size());
 
-		this.nodes = new ArrayList<SMTNode>();
+		this.nodes = new HashMap<Integer, SMTNode>();
 
 		int i = 0;
-		for(Point2D p : nodes)
-		    this.nodes.add(SMTNodeFactory.newNode(p.getX(), p.getY(), i++ < numberOfDestinations));
-
-		i = 0;
-		for(SMTNode n : this.nodes) {
-		    List<SMTNode> neighbors = new ArrayList<SMTNode>();
-		    for(Integer j : links.get(i++))
-		        neighbors.add(this.nodes.get(j));
-
-		    n.setNeighbors(neighbors);
+		for(Point2D p : nodes) { // Convert the coordinates into nodes
+		    SMTNode newNode = SMTNodeFactory.newNode(p.getX(), p.getY(), i++ < numberOfDestinations);
+		    this.nodes.put(newNode.id, newNode);
 		}
+
+		i = 0; // Add neighbor lists to the nodes
+		for(SMTNode n : this.nodes.values()) {
+		    n.setNeighbors(links.get(i++));
+		}
+
+		distinctLinks = new HashSet<SMTLink>();
+
+		updateLinks();
 
 		recalculate();
 	}
 
-	// TODO add node to all neighbors of node?
-	public void addNode(SMTNode node) {
-	    nodes.add(node);
-//	    for(SMTNode neighbor : node.getNeighboursWithinRange())
-//	        neighbor.getNeighboursWithinRange().add(node);
-	}
+
 
 	/**
-	 * Adds a link to the tree
-	 * @param l
-	 *     the link
+	 *
+	 * @param id1
+	 * @param id2
 	 */
-	public void addLink(SMTLink l) {
-	    l.source.addNeighbor(l.target);
+	public void addLink(int id1, int id2) {
+	    nodes.get(id1).addNeighbor(id2);
+	    nodes.get(id2).addNeighbor(id1);
+	    distinctLinks.add(new SMTLink(id1, id2));
 	}
 
 	/**
-	 * Removes a node from the tree
-	 * @param node
+	 * Removes a link
+	 * @param l
+	 */
+	public void removeLink(int id1, int id2) {
+	     nodes.get(id1).removeNeighbor(id2);
+	     nodes.get(id2).removeNeighbor(id1);
+	     distinctLinks.remove(new SMTLink(id1, id2));
+	}
+
+
+	/**
+	 *
+	 * @return
+	 *     All distinct links
+	 */
+	public Set<SMTLink> getAllDistinctLinks() {
+	    return distinctLinks;
+	}
+
+	/**
+	 * Iterates over all the neighbor lists and copies the links into the set of distinct links
+	 */
+	private void updateLinks() {
+	    distinctLinks.clear();
+	    for(SMTNode n : nodes.values())
+	        distinctLinks.addAll(n.getAllLinks());
+	}
+
+
+	 /**
+     * Adds a node to the tree. This will result in an increment of the node id tracker
+     * @param x
+     * @param y
+     * @param isDestination
+     * @param nextNodeId
+     *     the upcoming id must be passed in here, i.e IdTracker.getNextNodeId()
+     * @param neighbors
+     *     the neighbor list, pass null if no neighbors
+     */
+    public void addNode(double x, double y, boolean isDestination, int nextNodeId, List<Integer> neighbors) {
+        nodes.put(nextNodeId, SMTNodeFactory.newNode(x, y, isDestination));
+        if(neighbors != null) {
+            nodes.get(nextNodeId).setNeighbors(neighbors);
+            // Update neighbor list of other nodes
+            for(Integer i : neighbors)
+                nodes.get(i).addNeighbor(nextNodeId);
+        }
+        else
+            nodes.get(nextNodeId).setNeighbors(new ArrayList<Integer>());
+    }
+
+	/**
+	 * Removes a node from the tree, from all its neighbors neighbor lists, all the links associated with the node.
+	 * @param id
 	 *     the node
 	 */
-	public void removeNode(SMTNode node) {
-	    nodes.remove(node);
-	    for(SMTNode n : nodes)
-	        n.removeNeighbor(node);
+	public void removeNode(Integer id) {
+	    SMTNode n = nodes.get(id);
+
+	    // Remove this node from all its neighbors neighbor list...
+	    for(Integer i : n.getNeighboursWithinRange())
+	        nodes.get(i).removeNeighbor(id);
+
+	    // Remove links from distinctLinks
+	    for(Integer i : n.getNeighboursWithinRange())
+	        distinctLinks.remove(new SMTLink(id, i));
+
+	    // Remove node from this list
+	    nodes.remove(id);
 	}
+
+    /**
+     * Relocates a node
+     * @param x
+     * @param y
+     * @param id
+     */
+    public void relocateNode(double x, double y, int id) {
+        nodes.get(id).relocate(x, y);
+    }
 
 	/**
 	 *
@@ -89,12 +163,36 @@ public class SharedMulticastTree {
 
 	/**
 	 * @return
-	 *     All the sMTNodes, node cost and links lie within the sMTNodes (assuming a calculation has been done)
+	 *     All the nodes, node cost and links lie within the sMTNodes (assuming a calculation has been done)
 	 */
-	public List<SMTNode> getNodes() {
-	    return nodes;
+	public Collection<SMTNode> getNodes() {
+	    return nodes.values();
 	}
 
+	/**
+	 * Gets node with the given id
+	 * @param senderId
+	 * @return
+	 */
+    public SMTNode getNode(int senderId) {
+        System.out.println("SharedMultiCastTree.getNode(" + senderId + "), IdTracker.getNextId() - 1 = " + (IdTracker.getNextNodeId() - 1) );
+        return nodes.get(senderId);
+    }
+
+    /**
+     * Gets the neighbors of node with id.
+     * @param nodeId
+     * @return
+     */
+    public List<SMTNode> getNeighborsOfNode(int nodeId) {
+        List<Integer> neighborsWithinRangeIds = nodes.get(nodeId).getNeighboursWithinRange();
+        List<SMTNode> neighbors = new ArrayList<SMTNode>();
+
+        for(Integer i : neighborsWithinRangeIds)
+            neighbors.add(nodes.get(i));
+
+        return neighbors;
+    }
 
 	/**
 	 * Recalculates the value and returns the time it took in milliseconds.
@@ -103,15 +201,14 @@ public class SharedMulticastTree {
 	 *     the time of the recalculation
 	 */
     public double recalculate() {
-        for(SMTNode n : nodes)
+        for(SMTNode n : nodes.values())
             n.resetData();
 
         double start = System.currentTimeMillis();
 
-        for(SMTNode n : nodes) {
-//          n.setNeighbors(links.get(nodes.indexOf(n)));
-            n.setPowerLevels(getPowerLevels(n));
-            n.setNodeCost(getCost(n));
+        for(Integer i : nodes.keySet()) {
+            nodes.get(i).setPowerLevels(getPowerLevels(i));
+            nodes.get(i).setNodeCost(getCost(i));
         }
 
         calculateTotalCost();
@@ -121,50 +218,45 @@ public class SharedMulticastTree {
         return end - start;
     }
 
+
     /**
-     * Checks the adjacency matrix to see whether or not n1 and n2 are linked together
-     * @param n1
-     * @param n2
+     * Checks whether two nodes are linked
+     * @param id1
+     * @param id2
      * @return
-     *      yes if n1 and n2 is linked together
      */
-	private boolean isLinked(SMTNode n1, SMTNode n2) {
-	    return n1.getNeighboursWithinRange().contains(n2);
+	private boolean isLinked(int id1, int id2) {
+	    return nodes.get(id1).getNeighboursWithinRange().contains(id2);
 	}
 
 	/**
 	 *
-	 * @param n
+	 * @param id
 	 * @return
 	 *     gets the two power levels of the node.
 	 */
-	private double[] getPowerLevels(SMTNode n) {
-	    // 1. Find all sMTNodes linked to n
-	    List<SMTNode> linked = n.getNeighboursWithinRange();
+	private double[] getPowerLevels(Integer id) {
+	    // 1. Find all nodes linked to n
+	    List<Integer> neighbors = nodes.get(id).getNeighboursWithinRange();
 
 	    // 2. Calculate distance between n and all sMTNodes, store highest two distances
 	    PowerFilter filter = new PowerFilter(); // run all distances through filter, highest two will remain
-	    for(SMTNode node : linked)
-	        filter.runThroughFilter(getDistanceBetween(n, node));
+	    for(Integer nodeId : neighbors)
+	        filter.runThroughFilter(getDistanceBetween(id, nodeId));
 
 	    return filter.getHighestTwo();
 	}
 
-	private List<SMTNode> getNodesLinkedTo(SMTNode n) throws IllegalStateException {
-	    if(n.getNeighboursWithinRange() != null)
-	        throw new IllegalStateException("n already has a set neighbor list. This call is redundant "
-	                + "OR the node did not get flushed before recalculating.");
+	/**
+	 * Gets the distance between two nodes
+	 * @param id1
+	 * @param id2
+	 * @return
+	 */
+	private double getDistanceBetween(int id1, int id2) {
+	    SMTNode n1 = nodes.get(id1);
+	    SMTNode n2 = nodes.get(id2);
 
-	    List<SMTNode> linked = new ArrayList<SMTNode>();
-
-        for(SMTNode sMTNode : nodes)
-            if(n != sMTNode && isLinked(n, sMTNode))
-                linked.add(n);
-
-        return linked;
-	}
-
-	private double getDistanceBetween(SMTNode n1, SMTNode n2) {
 	    return Math.sqrt(
 	            Math.pow((n2.getX() - n1.getX()), 2)
 	            + Math.pow((n2.getY() - n1.getY()), 2)
@@ -173,14 +265,17 @@ public class SharedMulticastTree {
 
 	/**
 	 *
-	 * @param sender
-	 * @param receiver
+	 * @param n1
+	 * @param n2
 	 * @return
 	 *  	The power cost of the transmission
 	 */
-	private double powerCost(SMTNode sender, SMTNode receiver) {
-	    double lx = receiver.getX() - sender.getX();
-	    double ly = receiver.getY() - sender.getY();
+	private double powerCost(int n1, int n2) {
+	    SMTNode node1 = nodes.get(n1);
+	    SMTNode node2 = nodes.get(n2);
+
+	    double lx = node2.getX() - node1.getX();
+	    double ly = node2.getY() - node1.getY();
 
 	    double dist = Math.sqrt(Math.pow(lx, 2) + Math.pow(ly, 2));
 
@@ -200,79 +295,74 @@ public class SharedMulticastTree {
 
 	/**
 	 *
-	 * @param sender
-	 * @param receiver
+	 * @param id1
+	 * @param id2
 	 * @return
 	 */
-	private Subtree arc(SMTNode sender, SMTNode receiver) {
-
-		List<SMTNode> nodesWithinSendersRange = sender.getNeighboursWithinRange();
-		int indexOfReceiver = nodesWithinSendersRange.indexOf(sender);
-
-		return new Subtree(nodesWithinSendersRange.subList(0, indexOfReceiver));
+	private Subtree arc(int id1, int id2) {
+	    return null; // TODO
 	}
 
 	/**
 	 * Gets the subtree of a node
-	 * @param n
+	 * @param id
 	 * @return
 	 */
-	private Subtree arc(SMTNode n) {
-		List<SMTNode> receivers = n.getNeighboursWithinRange();
-		if(receivers.isEmpty())
-		    return new Subtree();
-		SMTNode receiver = receivers.get(receivers.size() - 1);
-		return arc(n, receiver);
+	private Subtree arc(int id) {
+	    return null; //TODO
 	}
 
 	/**
 	 *
-	 * @param n
+	 * @param id
 	 * @return
 	 *  	the two most distant nodes, the most distant at index 1, second most distant at index 0
 	 */
-	private SMTNode[] twoMostDistant(SMTNode n) {
-		List<SMTNode> withinRange = n.getNeighboursWithinRange();
+	private SMTNode[] twoMostDistant(int id) {
+		List<Integer> withinRange = nodes.get(id).getNeighboursWithinRange();
 		int size = withinRange.size();
 
 		SMTNode[] mostDistant = {null, null};
 
 		if(size == 1) {
-		    mostDistant[1] = withinRange.get(0);
+		    mostDistant[1] = nodes.get(withinRange.get(0));
 		}
 
 
 		if(size > 1) {
-		    NodeNeighborDistanceFilter filter = new NodeNeighborDistanceFilter(n);
-		    for(SMTNode neighbor : withinRange)
-		        filter.runThroughFilter(neighbor);
+		    NodeNeighborDistanceFilter filter = new NodeNeighborDistanceFilter(nodes.get(id));
+		    for(Integer neighborId : withinRange)
+		        filter.runThroughFilter(nodes.get(neighborId));
 
 		    return filter.getTwoMostDistantNodes();
 		}
+
 		return mostDistant;
 	}
 
 	/**
 	 *
-	 * @param n
+	 * @param id
 	 * @return
 	 *     the cost of n
 	 */
-	private double getCost(SMTNode n) {
-		int numberOfDestinationsSubtree = arc(n).size();
+	private double getCost(int id) {
+	    return 0; // TODO arc etc
+	    /*
+		int numberOfDestinationsSubtree = arc(id).size();
 
 		if(numberOfDestinationsSubtree == 0)
 		    return 0;
 
-		SMTNode[] mostDistantN = twoMostDistant(n);
-		double costMostDistant = powerCost(n, mostDistantN[1]);
-		double costSecondMostDistant = powerCost(n, mostDistantN[0]);
+		SMTNode[] mostDistantN = twoMostDistant(id);
+		double costMostDistant = powerCost(id, mostDistantN[1].id);
+		double costSecondMostDistant = powerCost(id, mostDistantN[0].id);
 
 		int numberOfDestinationsTree = nodes.size() - numberOfDestinationsSubtree; // TODO not sure if right
 
 		double result = numberOfDestinationsSubtree*costSecondMostDistant + numberOfDestinationsTree*costMostDistant;
 
-		return result;
+		return result;*/
 	}
 
 	/**
@@ -280,7 +370,7 @@ public class SharedMulticastTree {
 	 */
 	private void calculateTotalCost() {
 		double sum = 0;
-		for(SMTNode n : nodes)
+		for(SMTNode n : nodes.values())
 			sum += n.getNodeCost();
 		this.cost = sum;
 	}
@@ -315,6 +405,7 @@ public class SharedMulticastTree {
 		    return (nodes == null) ? 0 : nodes.size();
 		}
 	}
+
 
 
 	/**
@@ -425,14 +516,7 @@ public class SharedMulticastTree {
 	    }
 	}
 
-	/**
-	 * Called when a node is relocated visually, this transfers
-	 * the new coordinates onto the node in the tree.
-	 * @param data
-	 *     the updated data object
-	 */
-    public void relocateNode(SMTNode data) {
-        int index = nodes.indexOf(data);
-        nodes.get(index).relocate(data.getX(), data.getY());
-    }
+
+
+
 }

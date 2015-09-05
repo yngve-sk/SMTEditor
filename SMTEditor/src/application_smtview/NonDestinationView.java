@@ -1,7 +1,6 @@
 package application_smtview;
 
-import model.SMTNode;
-import application__componentview.Components;
+import application_componentview.Components;
 
 
 /**
@@ -11,7 +10,7 @@ import application__componentview.Components;
  */
 public class NonDestinationView extends SMTNodeView {
 
-    public NonDestinationView(double x, double y, double width, double height, SMTNode data) {
-        super(x, y, width, height, Components.NONDESTINATION.getImagePath(), data);
+    public NonDestinationView(double x, double y, double dimension, int nodeId) {
+        super(x, y, dimension, Components.NONDESTINATION.getImagePath(), nodeId);
     }
 }

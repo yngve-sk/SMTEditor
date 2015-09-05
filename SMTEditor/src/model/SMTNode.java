@@ -5,15 +5,13 @@ import java.util.List;
 
 public abstract class SMTNode {
 
-    private static int idCount = 0;
-
-    private final int id;
+    public final int id;
 	private double highestPowerLevel, lowestPowerLevel;
 	private double nodeCost;
 	private double x, y;
 
-	private boolean isDestination;
-	private List<SMTNode> neighborsWithinRange;
+	public final boolean isDestination;
+	private List<Integer> neighborsWithinRange;
 	private List<SMTLink> allLinks = new ArrayList<SMTLink>(); // this is implicit in neighbors, but it's a way to
 	                                                     // store the results instead of having a huge structure in the GUI
 
@@ -47,18 +45,26 @@ public abstract class SMTNode {
 	 */
 	public List<SMTLink> getAllLinks() {
 	    if(!linksAreUpdated) {
-	        for(SMTNode neighbor : neighborsWithinRange)
-	            allLinks.add(new SMTLink(this, neighbor, !isDestination));
+	        for(Integer neighbor : neighborsWithinRange)
+	            allLinks.add(new SMTLink(this.id, neighbor));
 	        linksAreUpdated = true;
 	    }
 	    return allLinks;
 	}
 
+
 	/**
 	 * Initializes a new node
+	 * @param x
+	 *     the x-coordinate
+	 * @param y
+	 *     the y-coordinate
 	 * @param isDestination
+	 *     true if it's a destination
+	 * @param id
+	 *     the node id
 	 */
-	public SMTNode(double x, double y, boolean isDestination) {
+	public SMTNode(double x, double y, boolean isDestination, int id) {
 	    this.x = x;
 	    this.y = y;
 
@@ -66,7 +72,7 @@ public abstract class SMTNode {
 
 	    allLinks = new ArrayList<SMTLink>();
 
-	    this.id = idCount++;
+	    this.id = id;
 	}
 
 	/**
@@ -78,14 +84,6 @@ public abstract class SMTNode {
 	    return "(" + x + ", " + y + ")";
 	}
 
-	/**
-	 *
-	 * @return
-	 *     true if the node is a destination, false if it's a nondestination
-	 */
-	public boolean isDestination() {
-	    return isDestination;
-	}
 
 	public String getType() {
 	   return isDestination ? "Destination" : "Non-Destination";
@@ -95,7 +93,7 @@ public abstract class SMTNode {
 	 * Stores the neighbour list in the node
 	 * @param neighborsWithinRange
 	 */
-	public void setNeighbors(List<SMTNode> neighborsWithinRange) {
+	public void setNeighbors(List<Integer> neighborsWithinRange) {
 	    this.neighborsWithinRange = neighborsWithinRange;
 	}
 
@@ -104,7 +102,7 @@ public abstract class SMTNode {
 	 * @return
 	 *     the neighbours within range currently stored in this node
 	 */
-	public List<SMTNode> getNeighboursWithinRange() {
+	List<Integer> getNeighboursWithinRange() {
 	    return this.neighborsWithinRange;
 	}
 
@@ -163,25 +161,22 @@ public abstract class SMTNode {
     }
 
     /**
-     * Adds a neighbor to the node
-     * @param neighbor
+     * Adds a neighbor to the node (neighbor must already exist in tree before adding it)
+     * @param neighborId
      *      the node
      */
-    public void addNeighbor(SMTNode neighbor) {
-        neighborsWithinRange.add(neighbor);
+    public void addNeighbor(int neighborId) {
+        neighborsWithinRange.add(neighborId);
         linksAreUpdated = false;
     }
 
     /**
      * Removes a neighbor from the node
-     * @param node
+     * @param id
+     *      the id
      */
-    public void removeNeighbor(SMTNode node) {
-        int index = neighborsWithinRange.indexOf(node);
-        if(index == -1) // not found
-            return;
-
-        neighborsWithinRange.remove(index);
+    public void removeNeighbor(Integer id) { // Integer so it calls remove(Object) and not remove(index)
+        neighborsWithinRange.remove(id);
         linksAreUpdated = false;
     }
 

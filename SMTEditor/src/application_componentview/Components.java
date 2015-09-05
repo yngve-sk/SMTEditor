@@ -1,4 +1,4 @@
-package application__componentview;
+package application_componentview;
 
 /**
  * Keeps track of the different types of components, their description and image URI
@@ -6,8 +6,8 @@ package application__componentview;
  *
  */
 public enum Components {
-    DESTINATION("images/destination.png", "Non-Destination"),
-    NONDESTINATION("images/nondestination.png", "Destination"),
+    DESTINATION("images/nondestination.png", "Destination"),
+    NONDESTINATION("images/destination.png", "Non-Destination"),
     LINK("images/link.png", "Link"),
     CURSOR("images/cursor.png", "Select");
 

@@ -1,6 +1,7 @@
 package application_smtview;
 
-import model.SMTNode;
+import javafx.geometry.Point2D;
+
 
 /**
  * Small factory to produce node views
@@ -9,8 +10,13 @@ import model.SMTNode;
  */
 public class SMTNodeViewFactory {
 
-    static SMTNodeView nodeView(double x, double y, double width, double height, SMTNode data, boolean isDestination) {
-        return isDestination ? new DestinationView(x, y, width, height, data) :
-                               new NonDestinationView(x, y, width, height, data);
+    static SMTNodeView newNodeView(int id, double x, double y, double dimension, boolean isDestination) {
+        return isDestination ? new DestinationView(x, y, dimension, id) :
+                               new NonDestinationView(x, y, dimension, id);
+    }
+
+    static SMTNodeView newNodeView(int id, Point2D p, double dimension, boolean isDestination) {
+        return isDestination ? new DestinationView(p.getX(), p.getY(), dimension, id) :
+                               new NonDestinationView(p.getX(), p.getY(), dimension, id);
     }
 }

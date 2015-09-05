@@ -45,6 +45,7 @@ public class StatsView extends Region {
 //        background.setFitWidth(width);
 //        background.setFitHeight(height);
 
+        // negative insets to expand outward
         BackgroundFill fill = new BackgroundFill(Color.BLACK, new CornerRadii(5), new Insets(-8, -8, -8, -8));
         Background background = new Background(fill);
         this.setBackground(background);
