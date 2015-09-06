@@ -41,7 +41,7 @@ public class TextOutputView extends Group {
 		
 		middle = new VBox();
 		numNodes = new OutputField(genericNodePath, "#Nodes");
-		numLinks = new OutputField(treeExamplePath, "Links");
+		numLinks = new OutputField(treeExamplePath, "#Links");
 		numDestinations = new OutputField(Components.DESTINATION.getImagePath(), "#Destinations");
 		numNonDestinations = new OutputField(Components.NONDESTINATION.getImagePath(), "#Non-Destinations");
 		calculationTime = new OutputField(clockPath, "Calculation time");
@@ -79,5 +79,55 @@ public class TextOutputView extends Group {
 		right.setFitHeight(height*0.6);
 	}
 	
+	/**
+	 * Updates the field
+	 * @param field
+	 *  	the type of the field. See {@link OutputFields}
+	 * @param newValue
+	 *  	new value, as string
+	 */
+	public void updateFieldWithNewValue(OutputFields field, String newValue) {
+		fieldWithType(field).setStringValue(newValue);
+	}
 	
+	/**
+	 * Maps the enum to a field
+	 * @param field
+	 *  	the enum type
+	 * @return
+	 *  	the corresponding field type
+	 */
+	private OutputField fieldWithType(OutputFields field) {
+		switch(field) {
+		case AVG_NODE_COST : return avgNodeCost;
+		case AVG_LINK_LENGTH : return avgLinkLength;
+		case MOST_EXPENSIVE_NODE : return mostExpensiveNode;
+		case LONGEST_LINK : return longestLink;
+		case TOTAL_TREE_COST : return totalTreeCost;
+		case NUM_NODES : return numNodes;
+		case NUM_LINKS : return numLinks;
+		case NUM_DESTINATIONS : return numDestinations;
+		case NUM_NONDESTINATIONS : return numNonDestinations;
+		case CALCULATION_TIME : return calculationTime;
+		default : return null;
+		}
+	}
+	
+	/**
+	 * Enum for the different kinds of output fields
+	 * @author Yngve Sekse Kristiansen
+	 *
+	 */
+	public enum OutputFields {
+		AVG_NODE_COST,
+		AVG_LINK_LENGTH,
+		MOST_EXPENSIVE_NODE,
+		LONGEST_LINK,
+		TOTAL_TREE_COST,
+		NUM_NODES,
+		NUM_LINKS,
+		NUM_DESTINATIONS,
+		NUM_NONDESTINATIONS,
+		CALCULATION_TIME;
+	}
 }

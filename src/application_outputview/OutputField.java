@@ -24,6 +24,7 @@ public class OutputField extends Group {
 		textOutput.setAlignment(Pos.BASELINE_CENTER);
 		
 		getChildren().addAll(icon, textOutput);
+		this.setStringValue("999test");
 	}
 	
 	private void layoutSubviews(double width, double height) {
@@ -45,5 +46,9 @@ public class OutputField extends Group {
 	public void resizeRelocate(double x, double y, double width, double height) {
 		super.resizeRelocate(x, y, width, height);
 		layoutSubviews(width, height);
+	}
+	
+	public void setStringValue(String s) {
+		this.textOutput.setText(labelText + s);
 	}
 }

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import application.SMTEditor;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -138,7 +139,9 @@ public class SMTContentView extends Group {
 
         // Add stats popup
         children.add(statsPopup);
-        // Done
+        // Refresh output view
+        SMTEditor editor = (SMTEditor) getScene();
+        editor.updateOutput(tree);
     }
 
     private Point2D nodeCoordinatesToVisual(SMTNode node) {
@@ -503,8 +506,7 @@ public class SMTContentView extends Group {
             return;
 
         // Recalculate data
-        double time = tree.recalculate(); // TODO pass time up in hierarchy for display...
-        System.out.println("recalculation took " + time + "!");
+        tree.recalculate(); 
         // Redraw tree, cache scroll position
         parent.cacheScroll();
         draw();

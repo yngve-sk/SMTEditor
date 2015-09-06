@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import application_outputview.TextOutputView.OutputFields;
 import javafx.geometry.Point2D;
 
 @SuppressWarnings("unused")
@@ -18,6 +19,7 @@ public class SharedMulticastTree {
 	private HashMap<Integer, SMTNode> nodes;
 	private double cost;
 	private List<SMTLink> distinctLinks;
+	private double calculationTime;
 
 	/**
 	 * Initializes a SMT
@@ -205,7 +207,7 @@ public class SharedMulticastTree {
 	 * @return
 	 *     the time of the recalculation
 	 */
-    public double recalculate() {
+    public void recalculate() {
         for(SMTNode n : nodes.values())
             n.recalculateData();
 
@@ -220,7 +222,7 @@ public class SharedMulticastTree {
 
         double end = System.currentTimeMillis();
 
-        return end - start;
+        calculationTime = end - start;
     }
 
 
@@ -524,6 +526,58 @@ public class SharedMulticastTree {
 
 	        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 	    }
+	}
+
+
+	public String getValueForField(OutputFields f) {
+		switch(f) {
+		case AVG_NODE_COST : return Double.toString(cost/nodes.size());
+		case AVG_LINK_LENGTH : return getAverageLinkLength();
+		case MOST_EXPENSIVE_NODE : return getMostExpensiveNode();
+		case LONGEST_LINK : return getLongestLink();
+		case TOTAL_TREE_COST : return Double.toString(cost);
+		case NUM_NODES : return Integer.toString(nodes.size());
+		case NUM_LINKS : return Integer.toString(distinctLinks.size());
+		case NUM_DESTINATIONS : return getNumDestinations();
+		case NUM_NONDESTINATIONS : return getNumNonDestinations();
+		case CALCULATION_TIME : return Double.toString(calculationTime);
+		default : return null;
+		}
+	}
+
+
+
+	private String getNumDestinations() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+	private String getNumNonDestinations() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+	private String getLongestLink() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+	private String getMostExpensiveNode() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+	private String getAverageLinkLength() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

@@ -3,6 +3,7 @@ package application;
 import application_componentview.SMTComponentView;
 import application_controlsview.ControlsView;
 import application_outputview.TextOutputView;
+import application_outputview.TextOutputView.OutputFields;
 import application_smtview.SMTView;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -17,8 +18,6 @@ import model.SharedMulticastTree;
 @SuppressWarnings("unused")
 
 public class SMTEditor extends Scene {
-
-    private SharedMulticastTree tree; // all the data to be displayed is here
 
     private SMTView editor; // displays the tree itself
     private SMTComponentView components; // displays components that can be dragged into editor
@@ -146,6 +145,12 @@ public class SMTEditor extends Scene {
         output.resizeRelocate(outputX, outputY, outputWidth, outputHeight);
         zoom.resizeRelocate(zoomX, zoomY, zoomWidth, zoomHeight);
         zoomLabel.resizeRelocate(zoomX + zoomWidth*0.15, zoomY + zoomHeight, zoomWidth, zoomHeight);
+    }
+    
+    public void updateOutput(SharedMulticastTree tree) {
+    	for(OutputFields f : TextOutputView.OutputFields.values()) {    		
+    		output.updateFieldWithNewValue(f, tree.getValueForField(f));
+    	}
     }
 
 
