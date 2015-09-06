@@ -60,7 +60,7 @@ public class StatsView extends Region {
 
         position = new Label();
 
-        Label[] allLabels = {cost, type, powerLevelOne, powerLevelTwo, position};
+        Label[] allLabels = {type, cost, powerLevelOne, powerLevelTwo, position};
         for(Label l : allLabels) {
             l.setAlignment(Pos.BASELINE_CENTER);
             l.setTextFill(Color.SNOW);
@@ -78,8 +78,8 @@ public class StatsView extends Region {
      *      the node
      */
     public void displayNode(SMTNode node) {
+    	type.setText(TYPE_STR + node.getType() + " (id = " + node.id + ")");
         cost.setText(COST_STR + node.getNodeCost());
-        type.setText(TYPE_STR + node.getType());
         powerLevelOne.setText(POWER_ONE_STR + node.getHighestPowerLevel());
         powerLevelTwo.setText(POWER_TWO_STR + node.getSecondHighestPowerLevel());
         position.setText(POSITION_STR + node.getPosition());

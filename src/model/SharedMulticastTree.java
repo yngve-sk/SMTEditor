@@ -456,10 +456,10 @@ public class SharedMulticastTree {
 	     *
 	     * @return
 	     *     The highest two values retained in the filter.
-	     *     The highest value at index 0, second highest at index 1
+	     *     The highest value at index 1, second highest at index 0
 	     */
 	    public double[] getHighestTwo() {
-	        double[] highestTwo = {highest, secondHighest};
+	        double[] highestTwo = {secondHighest, highest};
 	        return highestTwo;
 	    }
 	}

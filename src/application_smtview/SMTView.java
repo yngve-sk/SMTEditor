@@ -59,7 +59,7 @@ public class SMTView extends ScrollPane {
  }
 
     private void mouseClicked(MouseEvent e) {
-        System.out.println("CLICKED");
+//        System.out.println("CLICKED");
         content.mouseClicked();
 
 //        System.out.println("e coords : " + e.getX() + ", " + e.getY());

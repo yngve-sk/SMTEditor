@@ -95,8 +95,66 @@ public class SMTContentView extends Group {
     }
 
 
+//    public void draw() {
+//    	System.out.println("draw");
+//        ObservableList<Node> children = getChildren();
+//        children.clear();
+//        children.add(background);
+//
+//        linkDictionary.clear();
+//        nodeDictionary.clear();
+//
+//        Collection<SMTNode> nodes = tree.getNodes();
+//
+//        HashMap<Integer, Integer> endPointIds = new HashMap<Integer, Integer>();
+//
+//        double d = currentNodeDimension/2;
+//        // Create views out of all the nodes and links
+//        for(SMTNode n : nodes) {
+//            Point2D start = nodeCoordinatesToVisual(n);
+//            Point2D startCenter = start.add(d, d);
+//
+//            SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, start, getCurrentNodeDimension(), n.isDestination);
+//            nodeDictionary.put(n.id, view);
+//
+//            for(SMTNode neighbor : tree.getNeighborsOfNode(n.id)) {
+//                Point2D end = nodeCoordinatesToVisual(neighbor);
+//                Point2D endCenter = end.add(d, d);
+//
+//                SMTLink link = new SMTLink(n.id, neighbor.id);
+//                if(!linkDictionary.containsKey(link)) {
+//                    SMTLinkView linkView = SMTLinkViewFactory.newLinkView(startCenter, n.id, endCenter, neighbor.id);
+//                    linkDictionary.put(link, linkView);
+//
+//                    view.addLink(neighbor.id, true);
+//                    endPointIds.put(neighbor.id, n.id);
+//                }
+//            }
+//        }
+//
+//        for(Integer i : endPointIds.keySet())
+//            nodeDictionary.get(i).addLink(endPointIds.get(i), false);
+//
+//        // Add views to children
+//        children.addAll(linkDictionary.values());
+//        children.addAll(nodeDictionary.values());
+//
+//        // Add stats popup
+//        children.add(statsPopup);
+//        // Refresh output view
+//        SMTEditor editor = (SMTEditor) getScene();
+//        editor.updateOutput(tree);
+//    }
+//
+//    private Point2D nodeCoordinatesToVisual(SMTNode node) {
+//        return new Point2D(transformCoordinateValueFromModelToVisual(node.getX()),
+//                           transformCoordinateValueFromModelToVisual(node.getY())
+//                           );
+//    }
+
     public void draw() {
-        ObservableList<Node> children = getChildren();
+    	System.out.println("draw");
+    	ObservableList<Node> children = getChildren();
         children.clear();
         children.add(background);
 
@@ -105,35 +163,34 @@ public class SMTContentView extends Group {
 
         Collection<SMTNode> nodes = tree.getNodes();
 
-        HashMap<Integer, Integer> endPointIds = new HashMap<Integer, Integer>();
-
-        double d = currentNodeDimension/2;
-        // Create views out of all the nodes and links
+        // Generate all node views
         for(SMTNode n : nodes) {
-            Point2D start = nodeCoordinatesToVisual(n);
-            Point2D startCenter = start.add(d, d);
-
-            SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, start, getCurrentNodeDimension(), n.isDestination);
-            nodeDictionary.put(n.id, view);
-
-            for(SMTNode neighbor : tree.getNeighborsOfNode(n.id)) {
-                Point2D end = nodeCoordinatesToVisual(neighbor);
-                Point2D endCenter = end.add(d, d);
-
-                SMTLink link = new SMTLink(n.id, neighbor.id);
-                if(!linkDictionary.containsKey(link)) {
-                    SMTLinkView linkView = SMTLinkViewFactory.newLinkView(startCenter, n.id, endCenter, neighbor.id);
-                    linkDictionary.put(link, linkView);
-
-                    view.addLink(neighbor.id, true);
-                    endPointIds.put(neighbor.id, n.id);
-                }
-            }
+        	SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, n.getX(), n.getY(), getCurrentNodeDimension(),n.isDestination);
+        	nodeDictionary.put(n.id, view);
+        }
+        
+        List<SMTLink> allLinks = tree.getAllDistinctLinks();
+        
+        double dCenter = getCurrentNodeDimension()/2;
+        for(SMTLink l : allLinks) {
+        	int startId = l.id1;
+        	int endId = l.id2;
+        	
+        	SMTNodeView startView = nodeDictionary.get(startId);
+        	SMTNodeView endView = nodeDictionary.get(endId);
+        	
+        	Point2D start = startView.getCoordinatesWithinParent().add(dCenter, dCenter);
+        	Point2D end = endView.getCoordinatesWithinParent().add(dCenter, dCenter);
+        	
+        	SMTLinkView view = SMTLinkViewFactory.newLinkView(start, startId, end, endId);
+        	
+        	startView.addLink(endId, true);
+        	endView.addLink(startId, false);
+        	
+        	linkDictionary.put(l, view);
         }
 
-        for(Integer i : endPointIds.keySet())
-            nodeDictionary.get(i).addLink(endPointIds.get(i), false);
-
+        
         // Add views to children
         children.addAll(linkDictionary.values());
         children.addAll(nodeDictionary.values());
@@ -234,7 +291,7 @@ public class SMTContentView extends Group {
     void showStatsPopup(int senderId, double x, double y) {
         double dx = 0;
         double dy = 0;
-        System.out.println("ShowStatsPopup!");
+
         Point2D parentCoords = this.localToParent(x, y);
         double parentMidX = parent.getWidth()/2;
         double parentMidY = parent.getHeight()/2;
@@ -262,7 +319,6 @@ public class SMTContentView extends Group {
     }
 
     public void componentSelectionDidChange(Components componentType) {
-        System.out.println("Component type changed... is now " + componentType);
         this.componentType = componentType;
         if(componentType.isNode()) {
             phantom.setImage(componentType == Components.DESTINATION ? destination : nonDestination);
@@ -426,7 +482,6 @@ public class SMTContentView extends Group {
      *      the origin anchor of the link
      */
     private void createLinkAtOrigin(SMTNodeView origin) {
-        System.out.println("SMTContentView.createLinkAtOrigin()");
         double d = getCurrentNodeDimension()/2;
 
         Point2D coordinates = origin.getCoordinatesWithinParent();
@@ -487,7 +542,7 @@ public class SMTContentView extends Group {
     private void relocateLinksConnectedToNode(SMTNodeView node, double x, double y) {
 
         List<SMTLink> linksOfNodeBeingDragged = node.getAllLinks();
-        System.out.println("node.getAllLinks.size() = " + linksOfNodeBeingDragged.size());
+
         int i = 0;
         for(SMTLink l : linksOfNodeBeingDragged) {
             SMTLinkView view = linkDictionary.get(l);

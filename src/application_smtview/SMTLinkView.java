@@ -54,7 +54,6 @@ public class SMTLinkView extends Line {
         setEndY(end.getY());
         this.endId = endId;
         link = new SMTLink(startId, endId);
-        System.out.println("setEndPoint");
     }
 
     public int getStartId() {
@@ -87,13 +86,11 @@ public class SMTLinkView extends Line {
     }
 
     void highlightAsPowerLevelOne() {
-        System.out.println("Highlight as powerLevelOne");
         this.setStroke(Color.YELLOW);
         embolden();
     }
 
     void highlightAsPowerLevelTwo() {
-        System.out.println("Highlight as powerLevelTwo");
         this.setStroke(Color.KHAKI);
         embolden();
     }

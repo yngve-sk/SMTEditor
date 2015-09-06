@@ -11,7 +11,6 @@ public class Math {
 	public static double trim(double d) {
 		int mul = (int)(d*100);
 		double trim = 1.0*mul/100;;
-		System.out.println("trim = " + trim + ", d = " + d);
 		return trim;
 	}
 }

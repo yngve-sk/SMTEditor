@@ -38,7 +38,6 @@ public abstract class SMTNodeView extends ImageView {
     }
 
     private void mouseClicked(MouseEvent event) {
-        System.out.println("SMTNodeView Mouse clicked!!!");
      //   getContentView().mouseClicked();
     }
 
@@ -126,7 +125,6 @@ public abstract class SMTNodeView extends ImageView {
     private void mouseDragReleased(MouseEvent event) {
         if(!dragInProgress)
             return;
-        System.out.println("mouseDragReleased... x = " + event.getX() + ", y = " + event.getY());
         getContentView().nodeWasDroppedAfterDragMove();
         dragInProgress = false;
     }
