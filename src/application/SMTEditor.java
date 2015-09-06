@@ -1,5 +1,9 @@
 package application;
 
+import application_componentview.SMTComponentView;
+import application_controlsview.ControlsView;
+import application_outputview.TextOutputView;
+import application_smtview.SMTView;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
@@ -9,8 +13,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.text.TextAlignment;
 import model.SharedMulticastTree;
-import application_componentview.SMTComponentView;
-import application_smtview.SMTView;
 
 @SuppressWarnings("unused")
 
@@ -34,7 +36,7 @@ public class SMTEditor extends Scene {
 
     // Editor width and height
     private final double editorWidthRatio = 0.80;
-    private final double editorHeightRatio = 0.70;
+    private final double editorHeightRatio = 0.60;
 
     // Internal paddings
     private final double horizontalPaddingBetweenEditorAndComponentsRatio = 0.04;
@@ -137,7 +139,7 @@ public class SMTEditor extends Scene {
         double outputWidth = width*outputViewWidthRatio;
         double outputHeight = height*outputViewHeightRatio;
 
-        // TODO if the subview needs to resize its subviews, call resizeSubviews() in it
+        // TODO if the subview needs to resize its subviews, call 
         editor.resizeRelocate(editorX, editorY, editorWidth, editorHeight);
         components.resizeRelocate(componentsX, componentsY, componentsWidth, componentsHeight);
         buttons.resizeRelocate(buttonsX, buttonsY, buttonsWidth, buttonsHeight);

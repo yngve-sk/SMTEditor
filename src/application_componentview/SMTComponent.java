@@ -2,8 +2,10 @@ package application_componentview;
 
 import javafx.scene.Group;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.shape.Rectangle;
 
 public class SMTComponent extends Group {
 
@@ -23,7 +25,7 @@ public class SMTComponent extends Group {
     public SMTComponent(Components type) {
         icon = new ImageView(new Image(type.getImagePath()));
         text = new Label(type.getDescription());
-
+        
         this.type = type;
 
         icon.setOpacity(NOT_SELECTED_OPACITY);

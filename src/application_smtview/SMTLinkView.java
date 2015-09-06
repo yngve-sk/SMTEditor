@@ -27,6 +27,7 @@ public class SMTLinkView extends Line {
 
         this.setOnMouseEntered(event -> mouseEntered());
         this.setOnMouseExited(event -> mouseExited());
+        this.setOnMouseClicked(event -> mouseClicked());
 
         this.startId = startId;
         this.endId = endId;
@@ -35,7 +36,11 @@ public class SMTLinkView extends Line {
         reset();
     }
 
-    public SMTLinkView(Point2D start, int startId) {
+    private void mouseClicked() {
+    	getContentView().linkWasRemoved(startId, endId);
+	}
+
+	public SMTLinkView(Point2D start, int startId) {
         super(start.getX(), start.getY(), start.getX(), start.getY());
 
         this.setOnMouseEntered(event -> mouseEntered());
@@ -124,5 +129,9 @@ public class SMTLinkView extends Line {
             return (otherView.startId == this.startId) && (otherView.endId == this.endId);
         }
         return false;
+    }
+    
+    private SMTContentView getContentView() {
+    	return (SMTContentView) this.getParent();
     }
 }

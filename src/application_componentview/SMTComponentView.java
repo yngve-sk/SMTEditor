@@ -30,7 +30,7 @@ public class SMTComponentView extends Group {
 	    destination = new SMTComponent(Components.DESTINATION);
 	    link = new SMTComponent(Components.LINK);
 	    select = new SMTComponent(Components.CURSOR);
-
+	    
 	    select.select(); // this is the initial selected type
 
 	    this.getChildren().addAll(select, nonDestination, destination, link);

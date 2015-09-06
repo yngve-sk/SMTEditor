@@ -17,12 +17,10 @@ public abstract class SMTNode {
 	private List<SMTLink> allLinks = new ArrayList<SMTLink>(); // this is implicit in neighbors, but it's a way to
 	                                                     // store the results instead of having a huge structure in the GUI
 
-	private boolean linksAreUpdated = false; // a node might have 0 links so isEmpty/null checking isn't sufficent
-
 	/**
-	 * Resets data on this node (cost, highest and second highest power level), and recalculates links
+	 * Recalculates data on this node (resets cost, highest and second highest power level), and recalculates links
 	 */
-	void resetData() {
+	void recalculateData() {
 	    this.nodeCost = 0;
 	    this.highestPowerLevel = 0;
 	    this.lowestPowerLevel = 0;
@@ -31,8 +29,9 @@ public abstract class SMTNode {
     }
 
 	private void updateLinks() {
-        linksAreUpdated = false;
-        this.getAllLinks(); // recalculates
+		allLinks.clear();
+        for(Integer neighbor : neighborsWithinRange)
+            allLinks.add(new SMTLink(this.id, neighbor));
 	}
 
 	public void checkState() {
@@ -46,11 +45,6 @@ public abstract class SMTNode {
 	 *     all the links
 	 */
 	public List<SMTLink> getAllLinks() {
-	    if(!linksAreUpdated) {
-	        for(Integer neighbor : neighborsWithinRange)
-	            allLinks.add(new SMTLink(this.id, neighbor));
-	        linksAreUpdated = true;
-	    }
 	    return allLinks;
 	}
 
@@ -83,7 +77,7 @@ public abstract class SMTNode {
 	 *     a string representation of the nodes position in form (x,y)
 	 */
 	public String getPosition() {
-	    return "(" + x + ", " + y + ")";
+	    return "(" + utils.Math.trim(x) + ", " + utils.Math.trim(y) + ")";
 	}
 
 
@@ -111,11 +105,11 @@ public abstract class SMTNode {
 	/**
 	 * Stores the power levels in the node
 	 * @param powerLevels
-	 *     the power levels, highest power level at index 0, next highest at index 1
+	 *     the power levels, highest power level at index 1, next highest at index 0
 	 */
 	void setPowerLevels(double[] powerLevels) {
-	    highestPowerLevel = powerLevels[0];
-	    lowestPowerLevel = powerLevels[1];
+	    highestPowerLevel = utils.Math.trim(powerLevels[1]);
+	    lowestPowerLevel = utils.Math.trim(powerLevels[0]);
 	}
 
 	/**
@@ -168,8 +162,11 @@ public abstract class SMTNode {
      *      the node
      */
     public void addNeighbor(int neighborId) {
+    	if(neighborsWithinRange.contains(neighborId))
+    		return;
+
         neighborsWithinRange.add(neighborId);
-        linksAreUpdated = false;
+        updateLinks();
     }
 
     /**
@@ -179,7 +176,7 @@ public abstract class SMTNode {
      */
     public void removeNeighbor(Integer id) { // Integer so it calls remove(Object) and not remove(index)
         neighborsWithinRange.remove(id);
-        linksAreUpdated = false;
+        updateLinks();
     }
 
     /**

@@ -3,9 +3,7 @@ package model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javafx.geometry.Point2D;
 
@@ -19,7 +17,7 @@ public class SharedMulticastTree {
 
 	private HashMap<Integer, SMTNode> nodes;
 	private double cost;
-	private Set<SMTLink> distinctLinks;
+	private List<SMTLink> distinctLinks;
 
 	/**
 	 * Initializes a SMT
@@ -50,7 +48,7 @@ public class SharedMulticastTree {
 		    n.setNeighbors(links.get(i++));
 		}
 
-		distinctLinks = new HashSet<SMTLink>();
+		distinctLinks = new ArrayList<SMTLink>();
 
 		updateLinks();
 
@@ -65,9 +63,16 @@ public class SharedMulticastTree {
 	 * @param id2
 	 */
 	public void addLink(int id1, int id2) {
-	    nodes.get(id1).addNeighbor(id2);
+		if(!(nodes.containsKey(id1) && nodes.containsKey(id2)))
+			return;
+
+		SMTLink newLink = new SMTLink(id1, id2);
+		if(distinctLinks.contains(newLink))
+			return;
+
+		nodes.get(id1).addNeighbor(id2);
 	    nodes.get(id2).addNeighbor(id1);
-	    distinctLinks.add(new SMTLink(id1, id2));
+	    distinctLinks.add(newLink);
 	}
 
 	/**
@@ -86,7 +91,7 @@ public class SharedMulticastTree {
 	 * @return
 	 *     All distinct links
 	 */
-	public Set<SMTLink> getAllDistinctLinks() {
+	public List<SMTLink> getAllDistinctLinks() {
 	    return distinctLinks;
 	}
 
@@ -175,7 +180,7 @@ public class SharedMulticastTree {
 	 * @return
 	 */
     public SMTNode getNode(int senderId) {
-        System.out.println("SharedMultiCastTree.getNode(" + senderId + "), IdTracker.getNextId() - 1 = " + (IdTracker.getNextNodeId() - 1) );
+//      System.out.println("SharedMultiCastTree.getNode(" + senderId + "), IdTracker.getNextId() - 1 = " + (IdTracker.getNextNodeId() - 1) );
         return nodes.get(senderId);
     }
 
@@ -202,7 +207,7 @@ public class SharedMulticastTree {
 	 */
     public double recalculate() {
         for(SMTNode n : nodes.values())
-            n.resetData();
+            n.recalculateData();
 
         double start = System.currentTimeMillis();
 
@@ -227,8 +232,8 @@ public class SharedMulticastTree {
      */
 	private boolean isLinked(int id1, int id2) {
 	    return nodes.get(id1).getNeighboursWithinRange().contains(id2);
-	}
-
+	} 
+ 
 	/**
 	 *
 	 * @param id

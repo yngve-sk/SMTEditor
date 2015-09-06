@@ -519,6 +519,19 @@ public class SMTContentView extends Group {
         return linkViews;
     }
 
+    /**
+     * Called when a link is removed, links can only be removed in select mode
+     * @param id1
+     * @param id2
+     */
+    public void linkWasRemoved(int id1, int id2) {
+    	if(componentType != Components.CURSOR)
+    		return;
+    	
+    	tree.removeLink(id1, id2);
+    	tree.recalculate();
+    	draw();
+    }
 
 
 
