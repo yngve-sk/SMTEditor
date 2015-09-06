@@ -8,6 +8,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import application_componentview.Components;
+import application_controlsview.ControlsView.Buttons;
 
 /**
  * Contains the SMTContentView
@@ -188,5 +189,9 @@ public class SMTView extends ScrollPane {
         setHvalue(hScrollCache);
         setVvalue(vScrollCache);
     }
+
+	public void buttonClicked(Buttons type) {
+		content.buttonClicked(type);
+	}
 
 }

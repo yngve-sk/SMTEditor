@@ -20,6 +20,7 @@ import model.SMTNode;
 import model.SharedMulticastTree;
 import utils.Dictionary;
 import application_componentview.Components;
+import application_controlsview.ControlsView.Buttons;
 
 
 @SuppressWarnings("unused")
@@ -534,6 +535,69 @@ public class SMTContentView extends Group {
     	tree.recalculate();
     	draw();
     }
+
+
+	public void buttonClicked(Buttons type) {
+		switch(type) {
+    	case CLEAR : clear(); 
+    	break;
+    	case REMOVE_DESTINATIONS : removeDestinations(); 
+    	break;
+    	case REMOVE_NONDESTINATIONS : removeNonDestinations(); 
+    	break;
+    	case REMOVE_LINKS : removeLinks(); 
+    	break;
+    	case HIGHLIGHT_HEAVIEST_LINKS : highlightHeaviestLinks(); 
+    	break;
+    	case DESTINATIONS_TO_NONDESTINATIONS : destinationsToNonDestinations(); 
+    	break;
+    	case NONDESTINATIONS_TO_DESTINATIONS : nonDestinationsToDestinations(); 
+    	break;
+    	case RELOAD_CACHED_TREE : reloadCachedTree(); 
+    	break;
+    	default: ;
+		}
+	}
+
+
+	private void clear() {
+		System.out.println("Clear!");
+	}
+
+
+	private void removeDestinations() {
+		System.out.println("rm destinations!");
+	}
+
+
+	private void removeNonDestinations() {
+		System.out.println("rm non-destinations!");
+	}
+
+
+	private void removeLinks() {
+		System.out.println("rm links");
+	}
+
+
+	private void highlightHeaviestLinks() {
+		System.out.println("highlight heaviest links");
+	}
+
+
+	private void destinationsToNonDestinations() {
+		System.out.println("dest->nondest");
+	}
+
+
+	private void nonDestinationsToDestinations() {
+		System.out.println("nondest->dest");
+	}
+
+
+	private void reloadCachedTree() {
+		System.out.println("reload cached tree");
+	}
 
 
 

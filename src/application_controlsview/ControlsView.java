@@ -1,5 +1,6 @@
 package application_controlsview;
 
+import application.SMTEditor;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.layout.VBox;
@@ -46,6 +47,15 @@ public class ControlsView extends Group{
     	right.getChildren().addAll(highlightHeaviestLinks, destinationsIntoNonDestinations, nonDestinationsIntoDestinations, reloadCachedTree);
     	
     	this.getChildren().addAll(left, right);
+    	
+    	clear.setOnMouseClicked(event -> buttonClicked(Buttons.CLEAR));
+    	removeAllDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.REMOVE_DESTINATIONS));
+        removeAllNonDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.REMOVE_NONDESTINATIONS)); 
+        removeAllLinks.setOnMouseClicked(event -> buttonClicked(Buttons.REMOVE_LINKS));    
+        highlightHeaviestLinks.setOnMouseClicked(event -> buttonClicked(Buttons.HIGHLIGHT_HEAVIEST_LINKS)); 
+        destinationsIntoNonDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.DESTINATIONS_TO_NONDESTINATIONS));
+        nonDestinationsIntoDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.NONDESTINATIONS_TO_DESTINATIONS));
+        reloadCachedTree.setOnMouseClicked(event -> buttonClicked(Buttons.RELOAD_CACHED_TREE));
     }
     
     public void resizeRelocate(double x, double y, double width, double height) {
@@ -92,5 +102,21 @@ public class ControlsView extends Group{
     	left.relocate(0, 0);
     	right.relocate(width/2, 0);
 
+    }
+    
+    private void buttonClicked(Buttons type) {
+    	SMTEditor editor = (SMTEditor) getScene();
+    	editor.buttonClicked(type);
+    }
+    
+    public enum Buttons {
+    	CLEAR,
+    	REMOVE_DESTINATIONS,
+    	REMOVE_NONDESTINATIONS,
+    	REMOVE_LINKS,
+    	HIGHLIGHT_HEAVIEST_LINKS,
+    	DESTINATIONS_TO_NONDESTINATIONS,
+    	NONDESTINATIONS_TO_DESTINATIONS,
+    	RELOAD_CACHED_TREE;
     }
 }

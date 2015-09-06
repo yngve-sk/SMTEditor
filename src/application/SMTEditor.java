@@ -2,6 +2,7 @@ package application;
 
 import application_componentview.SMTComponentView;
 import application_controlsview.ControlsView;
+import application_controlsview.ControlsView.Buttons;
 import application_outputview.TextOutputView;
 import application_outputview.TextOutputView.OutputFields;
 import application_smtview.SMTView;
@@ -152,6 +153,10 @@ public class SMTEditor extends Scene {
     		output.updateFieldWithNewValue(f, tree.getValueForField(f));
     	}
     }
+
+	public void buttonClicked(Buttons type) {
+		editor.buttonClicked(type);
+	}
 
 
 
