@@ -227,5 +227,17 @@ public abstract class SMTNode {
 //		lowestPowerLevel = 0;
 	}
 
+	/************ COST ALGORITHM ************/
+	public double getCost(int nod, SMTNode j1) {
+		int subtreeSize = j1.getSubtreeSize();
+		
+		return subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
+	}
+
+	private int getSubtreeSize() {
+		// TODO ?
+		return 0;
+	}
+
 
 }

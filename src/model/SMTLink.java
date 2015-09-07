@@ -9,8 +9,36 @@ package model;
 public class SMTLink {
 
     public final int id1, id2;
+    
+    private int subtreeSize, oppositeSubtreeSize;
 
-    /**
+
+
+	public int getSubtreeSize() {
+		return subtreeSize;
+	}
+
+	/**
+	 * Sets subtree size id1->id2
+	 * @param subtreeSize
+	 */
+	public void setSubtreeSize(int subtreeSize) {
+		this.subtreeSize = subtreeSize;
+	}
+
+	public int getOppositeSubtreeSize() {
+		return oppositeSubtreeSize;
+	}
+
+	/**
+	 * Sets subtree size id2->id1
+	 * @param subtreeSize
+	 */
+	public void setOppositeSubtreeSize(int oppositeSubtreeSize) {
+		this.oppositeSubtreeSize = oppositeSubtreeSize;
+	}
+
+	/**
      * Initializes a new link
      * @param id1
      *      id of node 1

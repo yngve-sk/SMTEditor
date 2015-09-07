@@ -747,4 +747,52 @@ public class SharedMulticastTree {
 		return list;
 	}
 
+	/************ COST ALGORITHM ************/
+	
+	public double evaluate() {
+		double myCost = 0;
+		int nod = this.getNumberOfDestinations();
+		calculateSubtrees(findSomeLeaf(), nod, 1);
+		
+		for(SMTNode n : nodes.values()) 
+			if(this.twoMostDistant(n.id)[0] != null) { // 2nd most distant
+			double nCost = n.getCost(nod, null); // TODO J1?
+			myCost += n.getCost(nod, null);
+			}
+		this.cost = myCost;
+		return myCost;
+	}
+	
+	private int calculateSubtrees(SMTLink link, int nod, int stack) {
+		int id1 = link.id1;
+		int id2 = link.id2;
+		
+		SMTNode n2 = nodes.get(id2);
+		
+		int subtreeSize = 0;
+		if(n2.isDestination)
+			subtreeSize = 1;
+		
+		if(n2.getNeighboursWithinRange().size() == 1) {
+			link.setOppositeSubtreeSize(subtreeSize);
+			link.setSubtreeSize(nod - subtreeSize);
+			return subtreeSize;
+		}
+		
+		for(Integer i : n2.getNeighboursWithinRange())
+			if(!(nodes.get(i).id == id1)) 
+				subtreeSize += calculateSubtrees(new SMTLink(id1, i), nod, stack + 1);
+		
+		link.setOppositeSubtreeSize(subtreeSize);
+		link.setSubtreeSize(nod - subtreeSize);
+		
+		return subtreeSize;
+	}
+	
+	private SMTLink findSomeLeaf() {
+		for(SMTNode n : nodes.values()) 
+			if(n.getNeighboursWithinRange().size() == 1)
+				return new SMTLink(n.id, n.getNeighboursWithinRange().get(0));
+		return null;
+	}
 }
