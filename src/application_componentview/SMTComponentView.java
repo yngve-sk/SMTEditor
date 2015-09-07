@@ -15,10 +15,11 @@ import application_smtview.SMTView;
  */
 public class SMTComponentView extends Group {
 
+	private SMTComponent select;
+	private SMTComponent remove;
+	private SMTComponent destination;
     private SMTComponent nonDestination;
-    private SMTComponent destination;
     private SMTComponent link;
-    private SMTComponent select;
 
     private SMTView editor;
 
@@ -26,14 +27,15 @@ public class SMTComponentView extends Group {
      * Initiate a component view, this should only be called once during initialization of the GUI
      */
 	public SMTComponentView(SMTView editor) {
+		select = new SMTComponent(Components.CURSOR);
+		remove = new SMTComponent(Components.REMOVECURSOR);
+		destination = new SMTComponent(Components.DESTINATION);
 	    nonDestination = new SMTComponent(Components.NONDESTINATION);
-	    destination = new SMTComponent(Components.DESTINATION);
 	    link = new SMTComponent(Components.LINK);
-	    select = new SMTComponent(Components.CURSOR);
 	    
 	    select.select(); // this is the initial selected type
 
-	    this.getChildren().addAll(select, nonDestination, destination, link);
+	    this.getChildren().addAll(select, remove, nonDestination, destination, link);
 	    this.editor = editor;
 	}
 
@@ -67,7 +69,7 @@ public class SMTComponentView extends Group {
 	 * @param source
 	 */
     public void iconWasSelected(SMTComponent source) {
-        SMTComponent[] components = {select, nonDestination, destination, link};
+        SMTComponent[] components = {select, remove, nonDestination, destination, link};
 
         for(SMTComponent c : components)
             if(c != source)

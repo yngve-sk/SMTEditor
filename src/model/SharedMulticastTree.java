@@ -20,6 +20,8 @@ public class SharedMulticastTree {
 	private double cost;
 	private List<SMTLink> distinctLinks;
 	private double calculationTime;
+	
+	private int numberOfDestinations;
 
 	/**
 	 * Initializes a SMT
@@ -38,7 +40,8 @@ public class SharedMulticastTree {
 	        throw new IllegalArgumentException("Number of destination = " + numberOfDestinations + ", number of nodes = " + nodes.size());
 
 		this.nodes = new HashMap<Integer, SMTNode>();
-
+		this.numberOfDestinations = numberOfDestinations;
+		
 		int i = 0;
 		for(Point2D p : nodes) { // Convert the coordinates into nodes
 		    SMTNode newNode = SMTNodeFactory.newNode(p.getX(), p.getY(), i++ < numberOfDestinations);
@@ -51,8 +54,6 @@ public class SharedMulticastTree {
 		}
 
 		distinctLinks = new ArrayList<SMTLink>();
-
-		updateLinks();
 
 		recalculate();
 	}
@@ -75,6 +76,7 @@ public class SharedMulticastTree {
 		nodes.get(id1).addNeighbor(id2);
 	    nodes.get(id2).addNeighbor(id1);
 	    distinctLinks.add(newLink);
+	    recalculate();
 	}
 
 	/**
@@ -85,6 +87,7 @@ public class SharedMulticastTree {
 	     nodes.get(id1).removeNeighbor(id2);
 	     nodes.get(id2).removeNeighbor(id1);
 	     distinctLinks.remove(new SMTLink(id1, id2));
+	     recalculate();
 	}
 
 
@@ -102,8 +105,11 @@ public class SharedMulticastTree {
 	 */
 	private void updateLinks() {
 	    distinctLinks.clear();
-	    for(SMTNode n : nodes.values())
-	        distinctLinks.addAll(n.getAllLinks());
+	    for(SMTNode n : nodes.values()) 
+	    	for(SMTLink l : n.getAllLinks())
+	    		if(!distinctLinks.contains(l))
+	    			distinctLinks.add(l);
+	    
 	}
 
 
@@ -127,6 +133,10 @@ public class SharedMulticastTree {
         }
         else
             nodes.get(nextNodeId).setNeighbors(new ArrayList<Integer>());
+        
+        if(isDestination)
+        	++numberOfDestinations;
+	     recalculate();
     }
 
 	/**
@@ -136,6 +146,8 @@ public class SharedMulticastTree {
 	 */
 	public void removeNode(Integer id) {
 	    SMTNode n = nodes.get(id);
+	    if(n.isDestination)
+	    	--numberOfDestinations;
 
 	    // Remove this node from all its neighbors neighbor list...
 	    for(Integer i : n.getNeighboursWithinRange())
@@ -147,6 +159,7 @@ public class SharedMulticastTree {
 
 	    // Remove node from this list
 	    nodes.remove(id);
+	    recalculate();
 	}
 
     /**
@@ -157,6 +170,7 @@ public class SharedMulticastTree {
      */
     public void relocateNode(double x, double y, int id) {
         nodes.get(id).relocate(x, y);
+	    recalculate();
     }
 
 	/**
@@ -210,7 +224,8 @@ public class SharedMulticastTree {
     public void recalculate() {
         for(SMTNode n : nodes.values())
             n.recalculateData();
-
+        
+        updateLinks();
         double start = System.currentTimeMillis();
 
         for(Integer i : nodes.keySet()) {
@@ -548,36 +563,54 @@ public class SharedMulticastTree {
 
 
 	private String getNumDestinations() {
-		// TODO Auto-generated method stub
-		return null;
+		return Integer.toString(numberOfDestinations);
 	}
 
 
 
 	private String getNumNonDestinations() {
-		// TODO Auto-generated method stub
-		return null;
+		return Integer.toString(nodes.size() - numberOfDestinations);
 	}
 
 
 
 	private String getLongestLink() {
-		// TODO Auto-generated method stub
-		return null;
+		// Same as highest power level
+		double highest = 0;
+		for(SMTNode n : this.nodes.values()) {
+			double p = n.getHighestPowerLevel();
+			if(p > highest)
+				highest = p;
+		}
+			
+		return Double.toString(utils.Math.trim(highest));
 	}
 
 
 
 	private String getMostExpensiveNode() {
-		// TODO Auto-generated method stub
-		return null;
+		double mostExpensiveCost = 0;
+		int mostExpensiveId = -1;
+		for(SMTNode n : this.nodes.values()) {
+			double cost = n.getNodeCost();
+			if(cost > mostExpensiveCost) {
+				mostExpensiveCost = cost;
+				mostExpensiveId = n.id;
+			}
+		}
+		
+		return "#" + mostExpensiveId + " (" + mostExpensiveCost + ")";
 	}
 
 
 
 	private String getAverageLinkLength() {
-		// TODO Auto-generated method stub
-		return null;
+		double totalLength = 0;
+		for(SMTLink l : distinctLinks) {
+			totalLength += getDistanceBetween(l.id1, l.id2);
+		}
+		
+		return Double.toString(totalLength/distinctLinks.size());
 	}
 
 

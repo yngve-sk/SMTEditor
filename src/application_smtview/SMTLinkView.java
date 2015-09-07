@@ -65,7 +65,8 @@ public class SMTLinkView extends Line {
     }
 
     private void mouseEntered() {
-        this.setStroke(Color.RED);
+    	if(getContentView().canRemoveLink())
+    		this.setStroke(Color.RED);
     }
 
     private void mouseExited() {

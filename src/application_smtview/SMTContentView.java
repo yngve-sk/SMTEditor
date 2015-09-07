@@ -62,6 +62,8 @@ public class SMTContentView extends Group {
     private Dictionary<SMTLink, SMTLinkView> linkDictionary;
     private HashMap<Integer, SMTNodeView> nodeDictionary;
 
+    private boolean isUpdating; // this should be set to true whenever mouse actions should be blocked
+    
     public SMTContentView(SMTView parent) {
         this.parent = parent;
         currentDimension = referenceDimension;
@@ -153,10 +155,11 @@ public class SMTContentView extends Group {
 //    }
 
     public void draw() {
+    	isUpdating = true; // block mouse actions
     	System.out.println("draw");
-    	ObservableList<Node> children = getChildren();
-        children.clear();
-        children.add(background);
+        getChildren().retainAll(background, statsPopup, phantom);
+        ObservableList<Node> children = getChildren();
+//        children.add(background);
 
         linkDictionary.clear();
         nodeDictionary.clear();
@@ -196,8 +199,12 @@ public class SMTContentView extends Group {
         children.addAll(nodeDictionary.values());
 
         // Add stats popup
-        children.add(statsPopup);
+//      children.add(statsPopup);
         // Refresh output view
+    	isUpdating = false;
+    }
+    
+    private void updateOutput() {
         SMTEditor editor = (SMTEditor) getScene();
         editor.updateOutput(tree);
     }
@@ -289,6 +296,9 @@ public class SMTContentView extends Group {
      *      the id of the node to be displayed
      */
     void showStatsPopup(int senderId, double x, double y) {
+    	if(isUpdating)
+    		return;
+    	
         double dx = 0;
         double dy = 0;
 
@@ -329,7 +339,10 @@ public class SMTContentView extends Group {
     }
 
     public void mouseOver(Point2D coordinate) {
-        if(componentType == Components.LINK && isLinking) {
+    	if(isUpdating)
+    		return;
+    	
+    	if(componentType == Components.LINK && isLinking) {
         //  System.out.println("SMTContentView.mouseOver(" + coordinate.toString() + ")");
             linkInProgress.setEndX(coordinate.getX());
             linkInProgress.setEndY(coordinate.getY());
@@ -383,39 +396,36 @@ public class SMTContentView extends Group {
      *      the selected node
      */
     public void updateSelectedNode(SMTNodeView selected) {
-        selectedNode = selected;
+    	if(isUpdating)
+    		return;
+    	selectedNode = selected;
     }
 
     /**
      * Clears the selected node, this is called when the mouse exits a node
      */
     public void clearSelectedNode() {
-        selectedNode = null;
+    	if(isUpdating)
+    		return;
+    	selectedNode = null;
     }
 
     public void mouseClicked() { //System.out.println("SMTContentView.mouseClicked() ");
-        // If a node is placed and the tree is null, init a new tree
+    	if(isUpdating)
+    		return;
+    	
+    	// If a node is placed and the tree is null, init a new tree
         if(componentType.isNode() && tree == null) {
             tree = SMTFactory.emptyTree();
+            updateOutput();
          // System.out.println("New tree created, node placed");
         }
 
         if(componentType == Components.CURSOR) {
 
         }
-        else if(componentType.isNode()) {
-            double modelX = transformCoordinateValueFromVisualToModel(phantom.getLayoutX());
-            double modelY = transformCoordinateValueFromVisualToModel(phantom.getLayoutY());
-
-            SMTNodeView view = SMTNodeViewFactory.newNodeView(IdTracker.getNextNodeId(),
-                    phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(),
-                    componentType == Components.DESTINATION);
-
-            tree.addNode(modelX, modelY, componentType == Components.DESTINATION,
-                    IdTracker.getNextNodeId(), null); // order of these two calls is important
-
-            getChildren().add(view);
-        }
+        else if(componentType.isNode())
+        	addNode();
         else if(componentType == Components.LINK) { //System.out.println("Component type is link... selected Node = " + selectedNode);
             if(isLinking) { // A center node is set, link center node to selected node and isLinking to false
                 if(selectedNode == null) { // remove the node in progress and reset the stuff
@@ -431,14 +441,52 @@ public class SMTContentView extends Group {
                     createLinkAtOrigin(selectedNode);
             }
         }
+        else if(componentType == Components.REMOVECURSOR) {
+        	if(selectedNode != null)
+        		removeNode(selectedNode);
+        }
     }
 
     /**
+     * Adds a node to the tree
+     */
+    private void addNode() {
+        double modelX = transformCoordinateValueFromVisualToModel(phantom.getLayoutX());
+        double modelY = transformCoordinateValueFromVisualToModel(phantom.getLayoutY());
+
+        SMTNodeView view = SMTNodeViewFactory.newNodeView(IdTracker.getNextNodeId(),
+                phantom.getLayoutX(), phantom.getLayoutY(), getCurrentNodeDimension(),
+                componentType == Components.DESTINATION);
+
+        tree.addNode(modelX, modelY, componentType == Components.DESTINATION,
+                IdTracker.getNextNodeId(), null); // order of these two calls is important
+
+        getChildren().add(view);
+        updateOutput();
+	}
+
+
+	/**
+     * Removes a node, removes it from tree, then redraws the tree.
+     * @param selectedNode
+     */
+    private void removeNode(SMTNodeView selectedNode) {
+    	tree.removeNode(selectedNode.getNodeId());
+    	clearSelectedNode();
+    	updateOutput();
+    	draw();
+	}
+
+
+	/**
      * Anchors the link "in progress" to the selected node, i.e the selected node will be the end point of the link.
      * This also finalizes the node in progress and resets related fields
      * @param selectedNode
      */
     private void anchorLinkTo(SMTNodeView selectedNode) {
+    	if(selectedNode == linkOrigin)
+    		return;
+    	isUpdating = true;
         double d = getCurrentNodeDimension()/2;
         System.out.println("Anchoring link!");
         Point2D coordinates = selectedNode.getCoordinatesWithinParent();
@@ -452,8 +500,10 @@ public class SMTContentView extends Group {
         // Reset link cache
         resetLinkInProgress();
 
+        updateOutput();
+        
         // Redraw now that tree is updated
-        draw();
+        draw(); // will set isUpdating to false
     }
 
     /**
@@ -463,6 +513,7 @@ public class SMTContentView extends Group {
      */
     private void updateTreeWithNewLink(SMTLinkView newLink) {
         tree.addLink(newLink.getStartId(), newLink.getEndId());
+        updateOutput();
     }
 
     /**
@@ -519,7 +570,9 @@ public class SMTContentView extends Group {
      *      the node being dragged, its data should contain updated coordinates
      */
     public void nodeWasDragged(SMTNodeView node, double x, double y) {
-
+    	if(isUpdating)
+    		return;
+    	
         double modelX = transformCoordinateValueFromVisualToModel(x);
         double modelY = transformCoordinateValueFromVisualToModel(y);
 
@@ -557,8 +610,11 @@ public class SMTContentView extends Group {
         }
     }
 
+
     public void nodeWasDroppedAfterDragMove() {
-        if(!isDraggingNodesAllowed())
+    	if(isUpdating)
+    		return;
+    	if(!isDraggingNodesAllowed())
             return;
 
         // Recalculate data
@@ -569,7 +625,14 @@ public class SMTContentView extends Group {
         parent.restoreScrollFromCache();
     }
 
-
+    /**
+     * Gets all the link views corresponding with the SMTLink objects
+     * in the given list
+     * @param links
+     *  	the list of SMTLink s
+     * @return
+     *  	the corresponding link views
+     */
     public List<SMTLinkView> getLinkViews(List<SMTLink> links) {
         List<SMTLinkView> linkViews = new ArrayList<SMTLinkView>();
         for(SMTLink l : links)
@@ -578,17 +641,28 @@ public class SMTContentView extends Group {
     }
 
     /**
-     * Called when a link is removed, links can only be removed in select mode
+     * Called when a link is removed, links can only be removed in remove mode
      * @param id1
      * @param id2
      */
     public void linkWasRemoved(int id1, int id2) {
-    	if(componentType != Components.CURSOR)
+    	if(componentType != Components.REMOVECURSOR)
     		return;
+    	
     	
     	tree.removeLink(id1, id2);
     	tree.recalculate();
+    	updateOutput();
     	draw();
+    }
+    
+    /**
+     * Called by SMTLinkView to see if it can highlight as red, should only
+     * highlight as red if it's removable by clicking
+     * @return
+     */
+    boolean canRemoveLink() {
+    	return this.componentType == Components.REMOVECURSOR;
     }
 
 

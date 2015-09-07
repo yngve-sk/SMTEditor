@@ -9,7 +9,8 @@ public enum Components {
     DESTINATION("images/nondestination.png", "Destination"),
     NONDESTINATION("images/destination.png", "Non-Destination"),
     LINK("images/link.png", "Link"),
-    CURSOR("images/cursor.png", "Select");
+    CURSOR("images/cursor.png", "Select nodes/links"),
+    REMOVECURSOR("images/removecursor.png", "Remove nodes/links");
 
     private String imagePath;
     private String description;
