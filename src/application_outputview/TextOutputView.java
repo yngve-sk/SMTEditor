@@ -26,9 +26,7 @@ public class TextOutputView extends Group {
 	private final String genericNodePath = "images/genericnode.png";
 	private final String treeExamplePath = "images/tree-example.png";
 	private final String clockPath = "images/clock.png";
-	private final String dropAreaImagePath = "images/droparea.png";
 	
-	private ImageView right; // drop area for files
 	
 	public TextOutputView() {
 		left = new VBox();
@@ -46,10 +44,8 @@ public class TextOutputView extends Group {
 		numNonDestinations = new OutputField(Components.NONDESTINATION.getImagePath(), "#Non-Dest");
 		calculationTime = new OutputField(clockPath, "Calc time");
 		middle.getChildren().addAll(numNodes, numLinks, numDestinations, numNonDestinations, calculationTime);
-		
-		right = new ImageView(new Image(dropAreaImagePath));
-		
-		getChildren().addAll(left, middle, right);
+				
+		getChildren().addAll(left, middle);
 	}
 	
 	public void resizeRelocate(double x, double y, double width, double height) {
@@ -58,7 +54,7 @@ public class TextOutputView extends Group {
 	}
 	
 	private void layoutSubviews(double width, double height) {
-		double boxWidth = width/3;
+		double boxWidth = width/2;
 		double padding = 3;
 		
 		double outputFieldWidth = boxWidth - 2*padding;
@@ -73,10 +69,6 @@ public class TextOutputView extends Group {
 		}
 		
 		middle.relocate(boxWidth, 0);
-		right.relocate(1.8*boxWidth, 0);
-		
-		right.setFitWidth(boxWidth*0.8);
-		right.setFitHeight(height*0.6);
 	}
 	
 	/**

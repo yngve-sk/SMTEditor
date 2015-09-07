@@ -1,5 +1,7 @@
 package application;
 
+import java.io.File;
+
 import application_componentview.SMTComponentView;
 import application_controlsview.ControlsView;
 import application_controlsview.ControlsView.Buttons;
@@ -8,11 +10,15 @@ import application_outputview.TextOutputView.OutputFields;
 import application_smtview.SMTView;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import model.SharedMulticastTree;
@@ -79,7 +85,7 @@ public class SMTEditor extends Scene {
 
         zoom = new Slider();
         zoom.setMin(10);
-        zoom.setMax(125);
+        zoom.setMax(200);
         zoom.setValue(100);
 
         zoomLabel = new Label("100%");
@@ -116,9 +122,41 @@ public class SMTEditor extends Scene {
 		this.stage.setMinHeight(800);
 		this.stage.setMinWidth(1200);
 
+        this.setOnDragOver(new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                Dragboard db = event.getDragboard();
+                if (db.hasFiles()) {
+                    event.acceptTransferModes(TransferMode.COPY);
+                } else {
+                    event.consume();
+                }
+            }
+        });
+        
+		this.setOnDragDropped(event -> drop(event));
+
 
         root.getChildren().addAll(editor, components, buttons, output, zoom, zoomLabel);
     }
+    
+	private void drop(DragEvent event) {
+		Dragboard db = event.getDragboard();
+		
+		boolean dropCompleted;
+		
+		if(db.getFiles().size() != 1)
+			dropCompleted = false;
+		else
+			dropCompleted = true;
+		
+		File droppedFile = db.getFiles().get(0);
+		fileWasDropped(droppedFile);
+		
+		event.setDropCompleted(dropCompleted);
+        event.consume();
+
+	}
 
     protected void layoutSubviews() {
     	layoutSubviews(width, height);
@@ -185,6 +223,10 @@ public class SMTEditor extends Scene {
 
 	public void buttonClicked(Buttons type) {
 		editor.buttonClicked(type);
+	}
+
+	public void fileWasDropped(File file) {
+		editor.fileWasDropped(file);
 	}
 
 

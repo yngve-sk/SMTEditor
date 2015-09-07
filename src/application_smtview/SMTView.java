@@ -7,6 +7,9 @@ import javafx.scene.ImageCursor;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+
+import java.io.File;
+
 import application_componentview.Components;
 import application_controlsview.ControlsView.Buttons;
 
@@ -192,6 +195,10 @@ public class SMTView extends ScrollPane {
 
 	public void buttonClicked(Buttons type) {
 		content.buttonClicked(type);
+	}
+
+	public void fileWasDropped(File file) {
+		content.fileWasDropped(file);
 	}
 
 }

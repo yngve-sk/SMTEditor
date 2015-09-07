@@ -1,5 +1,6 @@
 package application_smtview;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,13 +37,13 @@ public class SMTContentView extends Group {
     private SharedMulticastTree tree;
     private Components componentType;
 
-    private final double maxDimension = 5000; /* TODO some of this "extra" data might be redundant...
+    private final double maxDimension = 2000; /* TODO some of this "extra" data might be redundant...
                                                * was supposed to be used to custom zooming,
                                                * but using scale seems to work fine for now...
                                                */
 
-    private final double referenceDimension = 1000; // TODO might need to be fit to default input dimension
-    private final double referenceNodeDimension = 35;
+    private final double referenceDimension = 150; // TODO might need to be fit to default input dimension
+    private final double referenceNodeDimension = 15;
 
     private double currentDimension;
     private double currentNodeDimension;
@@ -67,8 +68,8 @@ public class SMTContentView extends Group {
     
     public SMTContentView(SMTView parent) {
         this.parent = parent;
-        currentDimension = referenceDimension;
-        currentNodeDimension = referenceNodeDimension;
+        currentDimension = 1000;
+        currentNodeDimension = 25;
 
         this.statsPopup = new StatsView();
         this.statsPopup.setVisible(false);
@@ -169,7 +170,9 @@ public class SMTContentView extends Group {
 
         // Generate all node views
         for(SMTNode n : nodes) {
-        	SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, n.getX(), n.getY(), getCurrentNodeDimension(),n.isDestination);
+        	double x = transformCoordinateValueFromModelToVisual(n.getX());
+        	double y = transformCoordinateValueFromModelToVisual(n.getY());
+        	SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, x, y, getCurrentNodeDimension(),n.isDestination);
         	nodeDictionary.put(n.id, view);
         }
         
@@ -735,6 +738,15 @@ public class SMTContentView extends Group {
 	private void reloadCachedTree() {
 		tree = SMTParser.getCachedTree();
 		draw();
+	}
+
+
+	public void fileWasDropped(File file) {
+		SMTParser.parseFromFile(file);
+		if(SMTParser.didParseSuccessfully()) {
+			tree = SMTParser.getCachedTree();
+			draw();
+		}
 	}
 
 

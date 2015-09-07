@@ -18,10 +18,13 @@ public class SMTParser {
 
     private static int numNodes;
     private static int numDestinations;
+    
     private static List<Point2D> nodes;
     private static List<List<Integer>> neighbors;
+    
     private static boolean cacheIsEmpty = true;
-
+    private static boolean didParseSuccessfully = false;
+    
     /**
      * Parses a SharedMulticastTree from the file. After parsing it, if no new tree is parsed,
      * the data will be cached here. It can be cleared by calling clear(), and retrieved by calling
@@ -31,10 +34,10 @@ public class SMTParser {
      * @return
      *      the tree
      */
-    public static SharedMulticastTree parseFromFile(File file) {
+    public static void parseFromFile(File file) {
         readFile(file);
-        cacheIsEmpty = false;
-        return new SharedMulticastTree(nodes, neighbors, numDestinations);
+        if(didParseSuccessfully)
+        	cacheIsEmpty = false;
     }
 
     /**
@@ -73,26 +76,27 @@ public class SMTParser {
             String line;
 
             // Get to start delimiter
-            while((line = reader.readLine()) != null) {
+            while((line = removeComments(reader.readLine())) != null) {
                 if(line.equals(Delimiters.START.getStringValue()))
                     break;
             }
 
             // Read in num nodes, num destinations, 2 lines
-            line = reader.readLine();
+            line = removeComments(reader.readLine()).trim();
             numNodes = Integer.parseInt(line);
-            line = reader.readLine();
+            line = removeComments(reader.readLine()).trim();
             numDestinations = Integer.parseInt(line);
 
             // Read in coordinates
             List<Point2D> coordinates = new ArrayList<Point2D>();
             for(int i = 0; i < numNodes; i++) {
-                line = reader.readLine();
+                line = removeComments(reader.readLine());
+                System.out.println("Line = " + line);
                 coordinates.add(parseCoordinate(line));
             }
 
             // Expecting a delimiter now...
-            line = reader.readLine();
+            line = removeComments(reader.readLine());
             if(line.equals(Delimiters.NEIGHBORS_START.getStringValue())) {
                 reader.close();
                 throw new IllegalArgumentException("Expected delimiter " +
@@ -100,9 +104,10 @@ public class SMTParser {
             }
 
             // Read in neighbors
+            reader.readLine();
             List<List<Integer>> links = new ArrayList<List<Integer>>();
             for(int i = 0; i < numNodes; i++) {
-                line = reader.readLine();
+                line = removeComments(reader.readLine());
                 links.add(parseNeighborList(line));
             }
 
@@ -111,11 +116,21 @@ public class SMTParser {
             // done
 
             reader.close();
+            
+            nodes = coordinates;
+            
+        	didParseSuccessfully = true;
 
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	didParseSuccessfully = false;
         }
+    }
+    
+    private static String removeComments(String line) {
+    	if(line.contains("#")) {
+    		return line.split("#")[0];
+    	}
+    	return line;
     }
 
     /**
@@ -126,17 +141,16 @@ public class SMTParser {
      *      a list of integers, representing the neighbor indexes
      */
     private static List<Integer> parseNeighborList(String str) {
-        //1. Split off the index at the left
-        str.split("|");
-        str.trim();
-        String[] neighborsStr = str.split(" ");
-
-        List<Integer> neighbors = new ArrayList<Integer>();
-
-        for(String s : neighborsStr)
-            neighbors.add(Integer.parseInt(s));
-
-        return neighbors;
+    	int splitIndex = str.indexOf("|");
+    	String neighbors = str.substring(splitIndex+1, str.length()).trim();
+    	String[] neighborArray = neighbors.split(" ");
+    	
+    	List<Integer> neighborList = new ArrayList<Integer>();
+    	
+    	for(String s : neighborArray)
+    		neighborList.add(Integer.parseInt(s));
+    	
+    	return neighborList;
     }
 
     /**
@@ -169,5 +183,11 @@ public class SMTParser {
         }
 
     }
+    
+    
+
+	public static boolean didParseSuccessfully() {
+		return didParseSuccessfully;
+	}
 
 }
