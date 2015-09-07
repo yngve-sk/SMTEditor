@@ -6,4 +6,7 @@ public class Destination extends SMTNode{
         super(x, y, true, id);
     }
 
+    public Destination(SMTNode data) {
+    	super(data, true);
+    }
 }

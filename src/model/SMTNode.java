@@ -16,7 +16,48 @@ public abstract class SMTNode {
 	private List<Integer> neighborsWithinRange;
 	private List<SMTLink> allLinks = new ArrayList<SMTLink>(); // this is implicit in neighbors, but it's a way to
 	                                                     // store the results instead of having a huge structure in the GUI
+	/**
+	 * Initializes a new node
+	 * @param x
+	 *     the x-coordinate
+	 * @param y
+	 *     the y-coordinate
+	 * @param isDestination
+	 *     true if it's a destination
+	 * @param id
+	 *     the node id
+	 */
+	public SMTNode(double x, double y, boolean isDestination, int id) {
+	    this.x = x;
+	    this.y = y;
 
+	    this.isDestination = isDestination;
+
+	    allLinks = new ArrayList<SMTLink>();
+
+	    this.id = id;
+	}
+	
+	/**
+	 * Creates a copy SMTNode, used for transforming destinations to non destinations and vice versa
+	 * @param data
+	 * @param isDestination
+	 */
+	public SMTNode(SMTNode data, boolean isDestination) {
+		this.id = data.id;
+		this.isDestination = isDestination;
+		
+		this.highestPowerLevel = data.highestPowerLevel;
+		this.lowestPowerLevel = data.lowestPowerLevel;
+		this.nodeCost = data.nodeCost;
+	
+		this.x = data.x;
+		this.y = data.y;
+		
+		this.neighborsWithinRange = data.neighborsWithinRange;
+		this.allLinks = data.allLinks;
+	}
+	
 	/**
 	 * Recalculates data on this node (resets cost, highest and second highest power level), and recalculates links
 	 */
@@ -49,27 +90,7 @@ public abstract class SMTNode {
 	}
 
 
-	/**
-	 * Initializes a new node
-	 * @param x
-	 *     the x-coordinate
-	 * @param y
-	 *     the y-coordinate
-	 * @param isDestination
-	 *     true if it's a destination
-	 * @param id
-	 *     the node id
-	 */
-	public SMTNode(double x, double y, boolean isDestination, int id) {
-	    this.x = x;
-	    this.y = y;
 
-	    this.isDestination = isDestination;
-
-	    allLinks = new ArrayList<SMTLink>();
-
-	    this.id = id;
-	}
 
 	/**
 	 *
@@ -198,4 +219,13 @@ public abstract class SMTNode {
     public void setSortingId(int sortingId) {
         this.sortingId = sortingId;
     }
+
+	public void removeAllNeighbors() {
+		neighborsWithinRange.clear();
+		allLinks.clear();
+//		highestPowerLevel = 0; 
+//		lowestPowerLevel = 0;
+	}
+
+
 }

@@ -17,4 +17,16 @@ public class SMTNodeFactory {
 
         return node;
     }
+    
+    /**
+     * Makes an exact copy of node, but with the opposite type. I.e
+     * destination becomes nondestination and vice versa.
+     * @param n
+     * @param isDestination
+     * @return
+     *  	the copy of the node
+     */
+    public static SMTNode transformNode(SMTNode n) {
+    	return !n.isDestination ? new Destination(n) : new NonDestination(n);
+    }
 }

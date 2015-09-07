@@ -479,69 +479,6 @@ public class SharedMulticastTree {
 	    }
 	}
 
-	/**
-	 * Utility to help find the two most distant neighbors of a node
-	 * @author Yngve Sekse Kristiansen
-	 *
-	 */
-	private class NodeNeighborDistanceFilter {
-
-	    private SMTNode origin;
-
-	    private SMTNode furthest;
-	    private double furthestDistance;
-
-	    private SMTNode nextFurthest;
-	    private double nextFurthestDistance;
-
-	    /**
-	     * Initializes a new filter, taking in origin node
-	     * @param origin
-	     */
-	    public NodeNeighborDistanceFilter(SMTNode origin) {
-	        this.origin = origin;
-	    }
-
-	    public SMTNode[] getTwoMostDistantNodes() {
-	        SMTNode[] twoMostDistant = {nextFurthest, furthest};
-            return twoMostDistant;
-        }
-
-        /**
-	     * Runs a node through the filter, retains it if its distance is greater than the next biggest
-	     * distance currently being retained
-	     * @param neighbor
-	     *     the neighbor
-	     */
-	    public void runThroughFilter(SMTNode neighbor) {
-	        if(furthest == null) {
-	            furthest = neighbor;
-	            furthestDistance = distanceTo(neighbor);
-	        }
-	        else if(nextFurthest == null) {
-	            nextFurthest = neighbor;
-	            furthestDistance = distanceTo(neighbor);
-	        }
-
-	        double dist = distanceTo(neighbor);
-
-	        if(dist > furthestDistance) {
-	            furthest = neighbor;
-	            furthestDistance = dist;
-	        }
-	        else if(dist < nextFurthestDistance && dist < furthestDistance) {
-	            nextFurthest = neighbor;
-	            nextFurthestDistance = dist;
-	        }
-	    }
-
-	    private double distanceTo(SMTNode neighbor) {
-	        double dx = neighbor.getX() - origin.getX();
-	        double dy = neighbor.getY() - origin.getY();
-
-	        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-	    }
-	}
 
 
 	public String getValueForField(OutputFields f) {
@@ -613,7 +550,170 @@ public class SharedMulticastTree {
 		return Double.toString(totalLength/distinctLinks.size());
 	}
 
+	/**
+	 * Resets all data, empties the tree
+	 */
+	public void clear() {
+		nodes.clear();
+		cost = 0;
+		distinctLinks.clear();
+		calculationTime = 0;
+		numberOfDestinations = 0;
+		IdTracker.reset();
+	}
 
 
+
+	public void nonDestinationsToDestinations() {
+		for(SMTNode n : this.getNodes()) {
+			if(n.isDestination)
+				continue;
+			SMTNode transform = SMTNodeFactory.transformNode(n);
+			nodes.replace(n.id, transform);
+		}
+	}
+
+
+
+	public void destinationsToNonDestinations() {
+		for(SMTNode n : this.getNodes()) {
+			if(!n.isDestination)
+				continue;
+			
+			SMTNode transform = SMTNodeFactory.transformNode(n);
+			nodes.replace(n.id, transform);
+		}	
+	}
+
+
+
+	public SMTLink getHeaviestLink() {
+		double highest = 0;
+		SMTNode leader = null;
+		for(SMTNode n : this.nodes.values()) {
+			double p = n.getHighestPowerLevel();
+			if(p > highest) {
+				highest = p;
+				leader = n;
+			}
+		}
+			
+		return new SMTLink(leader.id, twoMostDistant(leader.id)[1].id);
+	}
+
+
+
+	public void removeLinks() {
+		for(SMTNode n : nodes.values())
+			n.removeAllNeighbors();
+		distinctLinks.clear();
+	}
+
+
+
+	public void removeNonDestinations() {
+		for(SMTNode n : nodes.values()) {
+			for(Integer neighbor : n.getNeighboursWithinRange())
+				if(!nodes.get(neighbor).isDestination)
+					n.removeNeighbor(neighbor);
+		}
+		
+		List<Integer> toBeRemoved = new ArrayList<Integer>();
+ 		
+		for(SMTNode n : nodes.values()) {
+			if(!n.isDestination)
+				toBeRemoved.add(n.id);
+		}
+		
+		// Avoiding java.util.ConcurrentModificationException
+		for(Integer i : toBeRemoved)
+			nodes.remove(i);
+	}
+
+
+
+	public void removeDestinations() {
+		for(SMTNode n : nodes.values()) {
+			for(Integer neighbor : n.getNeighboursWithinRange())
+				if(nodes.get(neighbor).isDestination)
+					n.removeNeighbor(neighbor);
+		}
+		
+		List<Integer> toBeRemoved = new ArrayList<Integer>();
+ 		
+		for(SMTNode n : nodes.values()) {
+			if(n.isDestination)
+				toBeRemoved.add(n.id);
+		}
+		
+		// Avoiding java.util.ConcurrentModificationException
+		for(Integer i : toBeRemoved)
+			nodes.remove(i);
+	}
+
+
+	/**
+	 * Utility to help find the two most distant neighbors of a node
+	 * @author Yngve Sekse Kristiansen
+	 *
+	 */
+	private class NodeNeighborDistanceFilter {
+
+	    private SMTNode origin;
+
+	    private SMTNode furthest;
+	    private double furthestDistance;
+
+	    private SMTNode nextFurthest;
+	    private double nextFurthestDistance;
+
+	    /**
+	     * Initializes a new filter, taking in origin node
+	     * @param origin
+	     */
+	    public NodeNeighborDistanceFilter(SMTNode origin) {
+	        this.origin = origin;
+	    }
+
+	    public SMTNode[] getTwoMostDistantNodes() {
+	        SMTNode[] twoMostDistant = {nextFurthest, furthest};
+            return twoMostDistant;
+        }
+
+        /**
+	     * Runs a node through the filter, retains it if its distance is greater than the next biggest
+	     * distance currently being retained
+	     * @param neighbor
+	     *     the neighbor
+	     */
+	    public void runThroughFilter(SMTNode neighbor) {
+	        if(furthest == null) {
+	            furthest = neighbor;
+	            furthestDistance = distanceTo(neighbor);
+	        }
+	        else if(nextFurthest == null) {
+	            nextFurthest = neighbor;
+	            furthestDistance = distanceTo(neighbor);
+	        }
+
+	        double dist = distanceTo(neighbor);
+
+	        if(dist > furthestDistance) {
+	            furthest = neighbor;
+	            furthestDistance = dist;
+	        }
+	        else if(dist < nextFurthestDistance && dist < furthestDistance) {
+	            nextFurthest = neighbor;
+	            nextFurthestDistance = dist;
+	        }
+	    }
+
+	    private double distanceTo(SMTNode neighbor) {
+	        double dx = neighbor.getX() - origin.getX();
+	        double dy = neighbor.getY() - origin.getY();
+
+	        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+	    }
+	}
 
 }

@@ -8,7 +8,6 @@ package model;
 public class IdTracker {
 
     private static int nodeId = 0;
-    private static int linkId = 0;
 
     /**
      * Gets a new node ID, this should never return the same id unless it's literally called 2^32 times
@@ -28,19 +27,9 @@ public class IdTracker {
     }
 
     /**
-     * Gets a new link ID, this should never return the same id unless it's literally called 2^32 times
-     * which for this application will probably never happen.
-     * @return
+     * Resets the tracker, this is only to be called when a tree is cleared
      */
-    public static int getNewLinkId() {
-        return linkId++;
-    }
-
-    /**
-     * Gets the next link id, call this to "peek" without incrementing the id tracker
-     * @return
-     */
-    public static int getNextLinkId() {
-        return linkId;
+    public static void reset() {
+    	nodeId = 0;
     }
 }

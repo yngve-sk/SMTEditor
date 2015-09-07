@@ -17,6 +17,7 @@ import model.IdTracker;
 import model.SMTFactory;
 import model.SMTLink;
 import model.SMTNode;
+import model.SMTParser;
 import model.SharedMulticastTree;
 import utils.Dictionary;
 import application_componentview.Components;
@@ -690,42 +691,50 @@ public class SMTContentView extends Group {
 
 
 	private void clear() {
-		System.out.println("Clear!");
+		tree.clear();
+		draw();
 	}
 
 
 	private void removeDestinations() {
-		System.out.println("rm destinations!");
+		tree.removeDestinations();
+		draw();
 	}
 
 
 	private void removeNonDestinations() {
-		System.out.println("rm non-destinations!");
+		tree.removeNonDestinations();
+		draw();
 	}
 
 
 	private void removeLinks() {
-		System.out.println("rm links");
+		tree.removeLinks();
+		draw();
 	}
 
 
 	private void highlightHeaviestLinks() {
-		System.out.println("highlight heaviest links");
+		SMTLink heaviestLink = tree.getHeaviestLink();
+		linkDictionary.get(heaviestLink).highlightAsPowerLevelOne();
 	}
 
 
 	private void destinationsToNonDestinations() {
-		System.out.println("dest->nondest");
+		tree.destinationsToNonDestinations();
+		draw();
 	}
 
 
 	private void nonDestinationsToDestinations() {
-		System.out.println("nondest->dest");
+		tree.nonDestinationsToDestinations();
+		draw();
 	}
 
 
 	private void reloadCachedTree() {
-		System.out.println("reload cached tree");
+		tree = SMTParser.getCachedTree();
+		draw();
 	}
 
 
