@@ -14,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
 import model.SharedMulticastTree;
 
 @SuppressWarnings("unused")
@@ -64,8 +65,11 @@ public class SMTEditor extends Scene {
     private final double zoomWidthRatio = 0.30; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
     private final double zoomYRatio = 0.08; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
     private final double zoomHeight = 30;
+    
+    private Stage stage;
+    private double width, height;
 
-    public SMTEditor(Group root, double width, double height) {
+    public SMTEditor(Group root, double width, double height, Stage primaryStage) {
         super(root, width, height);
         System.out.println("New SMTEditor, width = " + width + ", height = " + height);
         editor = new SMTView();
@@ -91,11 +95,36 @@ public class SMTEditor extends Scene {
             });
 
         layoutSubviews(width, height); // layout logic separated for autoresizing behavior
+        
+        this.stage = primaryStage;
+        this.stage.widthProperty().addListener(new ChangeListener<Number>() {
+		    @Override public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) {
+		        System.out.println("Width: " + newSceneWidth);
+	        	SMTEditor.this.width = newSceneWidth.doubleValue();
+		    	SMTEditor.this.layoutSubviews();
+		    }
+		});
+
+		this.stage.heightProperty().addListener(new ChangeListener<Number>() {
+		    @Override public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
+		    	System.out.println("Height: " + newSceneHeight);
+		    	SMTEditor.this.height = newSceneHeight.doubleValue();
+		    	SMTEditor.this.layoutSubviews();
+		    }
+		});
+		
+		this.stage.setMinHeight(800);
+		this.stage.setMinWidth(1200);
+
 
         root.getChildren().addAll(editor, components, buttons, output, zoom, zoomLabel);
     }
 
-    private void zoomDidChange(int newPercentageValue) {
+    protected void layoutSubviews() {
+    	layoutSubviews(width, height);
+	}
+
+	private void zoomDidChange(int newPercentageValue) {
         System.out.println("Zoom changed, new percentage!!! = " + newPercentageValue);
         zoomLabel.setText(newPercentageValue + "%");
         editor.zoomDidChange(newPercentageValue);

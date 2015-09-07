@@ -34,7 +34,7 @@ public class TextOutputView extends Group {
 		left = new VBox();
 		avgNodeCost = new OutputField(genericNodePath, "Avg node cost");
 		avgLinkLength = new OutputField(Components.LINK.getImagePath(), "Avg link length");
-		mostExpensiveNode = new OutputField(genericNodePath, "Most expensive node");
+		mostExpensiveNode = new OutputField(genericNodePath, "Most expensive");
 		longestLink = new OutputField(Components.LINK.getImagePath(), "Longest link");
 		totalTreeCost = new OutputField(treeExamplePath, "Total cost");
 		left.getChildren().addAll(avgNodeCost, avgLinkLength, mostExpensiveNode, longestLink, totalTreeCost);
@@ -42,9 +42,9 @@ public class TextOutputView extends Group {
 		middle = new VBox();
 		numNodes = new OutputField(genericNodePath, "#Nodes");
 		numLinks = new OutputField(treeExamplePath, "#Links");
-		numDestinations = new OutputField(Components.DESTINATION.getImagePath(), "#Destinations");
-		numNonDestinations = new OutputField(Components.NONDESTINATION.getImagePath(), "#Non-Destinations");
-		calculationTime = new OutputField(clockPath, "Calculation time");
+		numDestinations = new OutputField(Components.DESTINATION.getImagePath(), "#Dest");
+		numNonDestinations = new OutputField(Components.NONDESTINATION.getImagePath(), "#Non-Dest");
+		calculationTime = new OutputField(clockPath, "Calc time");
 		middle.getChildren().addAll(numNodes, numLinks, numDestinations, numNonDestinations, calculationTime);
 		
 		right = new ImageView(new Image(dropAreaImagePath));
