@@ -201,4 +201,8 @@ public class SMTView extends ScrollPane {
 		content.fileWasDropped(file);
 	}
 
+	public void saveButtonClicked() {
+		content.saveButtonClicked();
+	}
+
 }

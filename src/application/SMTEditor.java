@@ -20,7 +20,9 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import model.SMTParser;
 import model.SharedMulticastTree;
 
 @SuppressWarnings("unused")
@@ -227,6 +229,20 @@ public class SMTEditor extends Scene {
 
 	public void fileWasDropped(File file) {
 		editor.fileWasDropped(file);
+	}
+
+	public void saveButtonClicked() {
+		editor.saveButtonClicked();
+	}
+
+	public void saveTree(SharedMulticastTree tree) {
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Save Tree...");
+		
+		File file = chooser.showSaveDialog(this.stage);
+		if(file != null) {
+			SMTParser.writeTreeToFile(tree, file);
+		}
 	}
 
 

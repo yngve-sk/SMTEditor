@@ -671,6 +671,9 @@ public class SMTContentView extends Group {
 
 
 	public void buttonClicked(Buttons type) {
+		if(tree == null)
+			return;
+		
 		switch(type) {
     	case CLEAR : clear(); 
     	break;
@@ -747,6 +750,12 @@ public class SMTContentView extends Group {
 			tree = SMTParser.getCachedTree();
 			draw();
 		}
+	}
+
+
+	public void saveButtonClicked() {
+		SMTEditor editor = (SMTEditor) getScene();
+		editor.saveTree(tree);
 	}
 
 

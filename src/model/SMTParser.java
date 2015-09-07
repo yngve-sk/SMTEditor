@@ -3,11 +3,14 @@ package model;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import javafx.geometry.Point2D;
+import javafx.stage.FileChooser;
 
 /**
  *  Parses a file to a SMT object
@@ -96,15 +99,15 @@ public class SMTParser {
             }
 
             // Expecting a delimiter now...
+            reader.readLine();
             line = removeComments(reader.readLine());
-            if(line.equals(Delimiters.NEIGHBORS_START.getStringValue())) {
+            if(!line.equals(Delimiters.NEIGHBORS_START.getStringValue())) {
                 reader.close();
                 throw new IllegalArgumentException("Expected delimiter " +
                 Delimiters.NEIGHBORS_START.getStringValue() + ", got " + line);
             }
 
             // Read in neighbors
-            reader.readLine();
             List<List<Integer>> links = new ArrayList<List<Integer>>();
             for(int i = 0; i < numNodes; i++) {
                 line = removeComments(reader.readLine());
@@ -148,7 +151,8 @@ public class SMTParser {
     	List<Integer> neighborList = new ArrayList<Integer>();
     	
     	for(String s : neighborArray)
-    		neighborList.add(Integer.parseInt(s));
+    		if(!s.isEmpty())
+    			neighborList.add(Integer.parseInt(s));
     	
     	return neighborList;
     }
@@ -188,6 +192,63 @@ public class SMTParser {
 
 	public static boolean didParseSuccessfully() {
 		return didParseSuccessfully;
+	}
+
+	public static void writeTreeToFile(SharedMulticastTree tree, File file) {
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Save Tree");
+		
+		try {
+			PrintWriter writer = new PrintWriter(file);
+			writer.println(Delimiters.START.getStringValue());
+			// num destinations + num non destinations
+			writer.println(tree.getNodes().size());
+			writer.println(tree.getNumberOfDestinations());
+			
+			// Ensures correct order
+			List<SMTNode> allDestinations = tree.getAllDestinations();
+			List<SMTNode> allNonDestinations = tree.getAllNonDestinations();
+			
+			allDestinations.addAll(allNonDestinations);
+			
+			for(SMTNode n : allDestinations) {
+				writer.println(n.getX() + " " + n.getY());
+			}
+			
+			writer.println();
+			writer.println(Delimiters.NEIGHBORS_START.getStringValue());
+			System.out.println(allDestinations.size());
+			
+			for(int i = 0; i < allDestinations.size(); i++) {
+				SMTNode current = allDestinations.get(i);
+				List<Integer> neighbors = current.getNeighboursWithinRange();
+				int id = i;
+				
+				List<Integer> neighborList = new ArrayList<Integer>();
+				
+				for(Integer j : neighbors) {
+					int index = allDestinations.indexOf(tree.getNode(j));
+					neighborList.add(index);
+				}
+				
+				writer.println(parseNeighborStr(id, neighborList));
+			}
+			// Done
+			
+			writer.close();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private static String parseNeighborStr(int id, List<Integer> neighborList) {
+		String str = id + " | ";
+		for(Integer i : neighborList) {
+			str += i + " ";
+		}
+		return str;
 	}
 
 }

@@ -192,12 +192,12 @@ public class SharedMulticastTree {
 
 	/**
 	 * Gets node with the given id
-	 * @param senderId
+	 * @param id
 	 * @return
 	 */
-    public SMTNode getNode(int senderId) {
+    public SMTNode getNode(int id) {
 //      System.out.println("SharedMultiCastTree.getNode(" + senderId + "), IdTracker.getNextId() - 1 = " + (IdTracker.getNextNodeId() - 1) );
-        return nodes.get(senderId);
+        return nodes.get(id);
     }
 
     /**
@@ -588,6 +588,9 @@ public class SharedMulticastTree {
 
 
 	public SMTLink getHeaviestLink() {
+		if(distinctLinks.isEmpty())
+			return null;
+		
 		double highest = 0;
 		SMTNode leader = null;
 		for(SMTNode n : this.nodes.values()) {
@@ -714,6 +717,34 @@ public class SharedMulticastTree {
 
 	        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 	    }
+	}
+
+
+
+	public int getNumberOfDestinations() {
+		return numberOfDestinations;
+	}
+
+	public int getNumberOfNonDestinations() {
+		return nodes.size() - numberOfDestinations;
+	}
+	
+	public List<SMTNode> getAllDestinations() {
+		List<SMTNode> list = new ArrayList<SMTNode>();
+		for(SMTNode n : nodes.values()) {
+			if(n.isDestination)
+				list.add((Destination) n);
+		}
+		return list;
+	} 
+	
+	public List<SMTNode> getAllNonDestinations() {
+		List<SMTNode> list = new ArrayList<SMTNode>();
+		for(SMTNode n : nodes.values()) {
+			if(!n.isDestination)
+				list.add((NonDestination) n);
+		}
+		return list;
 	}
 
 }

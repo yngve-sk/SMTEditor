@@ -1,8 +1,10 @@
 package application_outputview;
 
+import application.SMTEditor;
 import application_componentview.Components;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
@@ -27,6 +29,8 @@ public class TextOutputView extends Group {
 	private final String treeExamplePath = "images/tree-example.png";
 	private final String clockPath = "images/clock.png";
 	
+	private Button right; // save
+	
 	
 	public TextOutputView() {
 		left = new VBox();
@@ -45,16 +49,24 @@ public class TextOutputView extends Group {
 		calculationTime = new OutputField(clockPath, "Calc time");
 		middle.getChildren().addAll(numNodes, numLinks, numDestinations, numNonDestinations, calculationTime);
 				
-		getChildren().addAll(left, middle);
+		right = new Button("Save Tree");
+		right.setOnMouseClicked(event -> save());
+		
+		getChildren().addAll(left, middle, right);
 	}
 	
+	private void save() {
+		SMTEditor editor = (SMTEditor) getScene();
+		editor.saveButtonClicked();
+	}
+
 	public void resizeRelocate(double x, double y, double width, double height) {
 		super.resizeRelocate(x, y, width, height);
 		layoutSubviews(width, height);
 	}
 	
 	private void layoutSubviews(double width, double height) {
-		double boxWidth = width/2;
+		double boxWidth = width*0.4;
 		double padding = 3;
 		
 		double outputFieldWidth = boxWidth - 2*padding;
@@ -69,6 +81,10 @@ public class TextOutputView extends Group {
 		}
 		
 		middle.relocate(boxWidth, 0);
+		
+		right.resizeRelocate(1.5*boxWidth, 0, height, width - 2*boxWidth);
+		right.setPrefWidth(width - 2*boxWidth);
+		right.setPrefHeight(width - 2*boxWidth);
 	}
 	
 	/**
