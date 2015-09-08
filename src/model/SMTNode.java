@@ -133,15 +133,6 @@ public abstract class SMTNode {
 	    lowestPowerLevel = utils.Math.trim(powerLevels[0]);
 	}
 
-	/**
-	 * Stores the node cost value in the node
-	 * @param nodeCost
-	 *     the node cost
-	 */
-	void setNodeCost(double nodeCost) {
-	    this.nodeCost = nodeCost;
-	}
-
 	public double getHighestPowerLevel() {
         return this.highestPowerLevel;
     }
@@ -149,10 +140,6 @@ public abstract class SMTNode {
 	public double getSecondHighestPowerLevel() {
         return this.lowestPowerLevel;
     }
-
-	public double getNodeCost() {
-	    return this.nodeCost;
-	}
 
     public double getX() {
         return x;
@@ -227,17 +214,22 @@ public abstract class SMTNode {
 //		lowestPowerLevel = 0;
 	}
 
+	
 	/************ COST ALGORITHM ************/
-	public double getCost(int nod, SMTNode j1) {
-		int subtreeSize = j1.getSubtreeSize();
+	public double getCost(int nod, SMTLink heaviestLink) {
+		int subtreeSize = heaviestLink.getSubtreeSize();
 		
-		return subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
+		double cost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
+		this.nodeCost = cost;
+		return cost;
+	}
+	
+	public double getNodeCost() {
+		return this.nodeCost;
 	}
 
-	private int getSubtreeSize() {
-		// TODO ?
-		return 0;
-	}
+	
+
 
 
 }

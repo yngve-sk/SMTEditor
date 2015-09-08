@@ -228,12 +228,7 @@ public class SharedMulticastTree {
         updateLinks();
         double start = System.currentTimeMillis();
 
-        for(Integer i : nodes.keySet()) {
-            nodes.get(i).setPowerLevels(getPowerLevels(i));
-            nodes.get(i).setNodeCost(getCost(i));
-        }
-
-        calculateTotalCost();
+        evaluate();
 
         double end = System.currentTimeMillis();
 
@@ -367,40 +362,7 @@ public class SharedMulticastTree {
    }
 
 
-	/**
-	 *
-	 * @param id
-	 * @return
-	 *     the cost of n
-	 */
-	private double getCost(int id) {
-	    return 0; // TODO
-	    /*
-		int numberOfDestinationsSubtree = arc(id).size();
 
-		if(numberOfDestinationsSubtree == 0)
-		    return 0;
-
-		SMTNode[] mostDistantN = twoMostDistant(id);
-		double costMostDistant = powerCost(id, mostDistantN[1].id);
-		double costSecondMostDistant = powerCost(id, mostDistantN[0].id);
-
-		int numberOfDestinationsTree = nodes.size() - numberOfDestinationsSubtree; // TODO not sure if right
-
-		double result = numberOfDestinationsSubtree*costSecondMostDistant + numberOfDestinationsTree*costMostDistant;
-
-		return result; */
-	}
-
-	/**
-	 * Calculates the total cost
-	 */
-	private void calculateTotalCost() {
-		double sum = 0;
-		for(SMTNode n : nodes.values())
-			sum += n.getNodeCost();
-		this.cost = sum;
-	}
 
 	/**
 	 * Class to represent a subtree with minimal functionality
@@ -750,18 +712,34 @@ public class SharedMulticastTree {
 	/************ COST ALGORITHM ************/
 	
 	public double evaluate() {
+		if(distinctLinks.isEmpty())
+			return 0;
+		
 		double myCost = 0;
 		int nod = this.getNumberOfDestinations();
 		calculateSubtrees(findSomeLeaf(), nod, 1);
 		
 		for(SMTNode n : nodes.values()) 
 			if(this.twoMostDistant(n.id)[0] != null) { // 2nd most distant
-			double nCost = n.getCost(nod, null); // TODO J1?
-			myCost += n.getCost(nod, null);
+				SMTLink heaviestLink = getHeaviestLink(n);
+				double nCost = n.getCost(nod, heaviestLink); // TODO J1?
+				myCost += n.getCost(nod, heaviestLink);
 			}
 		this.cost = myCost;
 		return myCost;
 	}
+	
+	/**
+	 * 
+	 * Recursively calculate subtrees of nodes defined by the link
+	 * @param link
+	 * @param nod
+	 *  	num destinations
+	 * @param stack
+	 *  	value(?)
+	 * @return
+	 *  	subtree size
+	 */
 	
 	private int calculateSubtrees(SMTLink link, int nod, int stack) {
 		int id1 = link.id1;
@@ -780,8 +758,11 @@ public class SharedMulticastTree {
 		}
 		
 		for(Integer i : n2.getNeighboursWithinRange())
-			if(!(nodes.get(i).id == id1)) 
-				subtreeSize += calculateSubtrees(new SMTLink(id1, i), nod, stack + 1);
+			if(!(nodes.get(i).id == id1))  {
+				int index = distinctLinks.indexOf(new SMTLink(id1, i));
+				SMTLink theLink = distinctLinks.get(index); // obtain ref to link in list
+				subtreeSize += calculateSubtrees(theLink, nod, stack + 1);
+			}
 		
 		link.setOppositeSubtreeSize(subtreeSize);
 		link.setSubtreeSize(nod - subtreeSize);
@@ -795,4 +776,12 @@ public class SharedMulticastTree {
 				return new SMTLink(n.id, n.getNeighboursWithinRange().get(0));
 		return null;
 	}
+	
+	private SMTLink getHeaviestLink(SMTNode n) {
+		SMTLink link = new SMTLink(n.id, twoMostDistant(n.id)[1].id);
+		distinctLinks.remove(link);
+		distinctLinks.add(link);
+		return link;
+	}
+	
 }
