@@ -757,9 +757,17 @@ public class SharedMulticastTree {
 			return subtreeSize;
 		}
 		
+		System.out.println("CalculateSubtrees, links.size() = " + distinctLinks.size());
+		
 		for(Integer i : n2.getNeighboursWithinRange())
 			if(!(nodes.get(i).id == id1))  {
-				int index = distinctLinks.indexOf(new SMTLink(id1, i));
+				System.out.println("getting link between " + id2 + " and " + i);
+				System.out.println("Contains? " + distinctLinks.contains(new SMTLink(id2, i)));
+				
+				for(SMTLink l : distinctLinks)
+					System.out.println(l);
+				
+				int index = distinctLinks.indexOf(new SMTLink(id2, i));
 				SMTLink theLink = distinctLinks.get(index); // obtain ref to link in list
 				subtreeSize += calculateSubtrees(theLink, nod, stack + 1);
 			}
