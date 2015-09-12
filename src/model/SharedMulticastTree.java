@@ -798,6 +798,7 @@ public class SharedMulticastTree {
 		SMTLink link = distinctLinks.get(linkKey);
 		System.out.println("link is nulL??? ");
 		System.out.println(link == null);
+		printDistinctLinks();
 		System.out.println("link = " + link);
 		System.out.println("link.id1 = " + link.id1);
 		int id1 = link.id1;
@@ -816,13 +817,29 @@ public class SharedMulticastTree {
 		}
 		
 		for(Integer i : n2.getNeighboursWithinRange())
-			if((nodes.get(i).id != id1)) 
-				subtreeSize += calculateSubtrees(new SMTLinkKey(id1, i), nod);
+			if((i != id1)) 
+				subtreeSize += calculateSubtrees(new SMTLinkKey(id2, i), nod);
 		
 		link.setOppositeSubtreeSize(subtreeSize);
 		link.setSubtreeSize(nod - subtreeSize);
 		
 		return subtreeSize;
+	}
+	
+	private void printDistinctLinks() {
+
+		System.out.println("----------------");
+		System.out.println("----------------");
+		System.out.println("----------------");
+		
+		System.out.println("NUM LINKS = " + distinctLinks.values().size());
+
+		System.out.println("----------------");
+		
+		for(SMTLink k : distinctLinks.values())
+			System.out.println(k);
+		
+		System.out.println("----------------");
 	}
 	
 	/**
@@ -845,11 +862,22 @@ public class SharedMulticastTree {
 	}
 	
 	public void validate() {
+		int numLeafs = 0;
 		for(SMTNode n : this.nodes.values()) // No non-destination leaves
-			if(n.getNeighboursWithinRange().size() == 1 && !n.isDestination) {
-				isValidSMT = false;
-				return;
+			if(n.getNeighboursWithinRange().size() == 1) {
+				if(!n.isDestination) {
+					isValidSMT = false;
+					return;
+				}
+				else {
+					numLeafs++;
+				}
 			}
+		
+		if(numLeafs == 0) {
+			isValidSMT = false;
+			return;
+		}
 		
 		if(distinctLinks.isEmpty()) {
 			isValidSMT = false;
