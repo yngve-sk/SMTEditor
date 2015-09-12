@@ -40,12 +40,16 @@ public class Dictionary<K, V> {
         values.clear();
     }
 
-    public boolean containsKey(SMTLink link) {
-        return keys.contains(link);
+    public boolean containsKey(K k) {
+        return keys.contains(k);
     }
 
     public List<V> values() {
         return values;
     }
+
+	public boolean isEmpty() {
+		return values.isEmpty();
+	}
 
 }

@@ -12,10 +12,12 @@ public class SMTLink {
     
     private int subtreeSize, oppositeSubtreeSize;
 
-
-
-	public int getSubtreeSize() {
-		return subtreeSize;
+	public int getSubtreeSize(int id) {
+		if(id == id1)
+			return subtreeSize;
+		else if(id == id2)
+			return oppositeSubtreeSize;
+		return -1;
 	}
 
 	/**
@@ -26,9 +28,6 @@ public class SMTLink {
 		this.subtreeSize = subtreeSize;
 	}
 
-	public int getOppositeSubtreeSize() {
-		return oppositeSubtreeSize;
-	}
 
 	/**
 	 * Sets subtree size id2->id1
@@ -66,4 +65,5 @@ public class SMTLink {
         SMTLink other = (SMTLink) obj;
         return (this.id1 == other.id1 && this.id2 == other.id2) || (this.id1 == other.id2 && this.id2 == other.id1);
     }
+
 }

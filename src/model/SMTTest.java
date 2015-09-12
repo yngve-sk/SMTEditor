@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import utils.Dictionary;
+
 public class SMTTest {
 
 	/**
@@ -60,6 +62,7 @@ public class SMTTest {
 	 */
 	@Test
 	public void testSMTAddRemoveLink() {
+		IdTracker.reset();
 		SharedMulticastTree smt = SMTFactory.emptyTree();
 		assertEquals(smt.getAllDistinctLinks().size(), 0);
 		
@@ -86,6 +89,7 @@ public class SMTTest {
 	@Test
 	public void testNoDuplicateLinksAllowed() {
 		SharedMulticastTree smt = SMTFactory.emptyTree();
+		IdTracker.reset();
 
 		smt.addNode(5, 5, true, 0, null);
 		smt.addNode(5, 5, true, 1, null);
@@ -102,6 +106,7 @@ public class SMTTest {
 	@Test
 	public void testLinkCountIsConsistentWithNeighbors() {
 		SharedMulticastTree tree = SMTFactory.emptyTree();
+		IdTracker.reset();
 
 		tree.addNode(5, 5, true, 0, null);
 		tree.addNode(10, 10, true, 1, null);
@@ -142,6 +147,7 @@ public class SMTTest {
 	@Test
 	public void testNodeNeighborListsAreUpdatedWhenLinksAreAddedToTree() {
 		SharedMulticastTree tree = SMTFactory.emptyTree();
+		IdTracker.reset();
 
 		int iMax = 30;
 		
@@ -187,4 +193,18 @@ public class SMTTest {
 		//TODO
 	}
 
+	@Test
+	public void testSMTLinkDict() {
+		Dictionary<SMTLinkKey, SMTLink> d = new Dictionary<SMTLinkKey, SMTLink>();
+		
+		SMTLinkKey key = new SMTLinkKey(1,2);
+		d.put(new SMTLinkKey(1,2), new SMTLink(1,2));
+	
+		d.get(key).setSubtreeSize(100);
+		assertEquals(d.get(key).getSubtreeSize(1), 100);
+		
+		d.get(key).setOppositeSubtreeSize(200);
+		assertEquals(d.get(key).getSubtreeSize(2), 200);
+	}
+	
 }

@@ -226,18 +226,32 @@ public abstract class SMTNode {
 //		highestPowerLevel = 0; 
 //		lowestPowerLevel = 0;
 	}
+	
+	private int mostDistant = -1;
+	private int secondMostDistant = -1;
+	
+	public void setTwoMostDistant(int[] twoMostDistant) {
+		mostDistant = twoMostDistant[0];
+		secondMostDistant = twoMostDistant[1];
+	}
+	
+	int getMostDistant() {
+		return mostDistant;
+	}
 
+	int getSecondMostDistant() {
+		return secondMostDistant;
+	}
 	/************ COST ALGORITHM ************/
-	public double getCost(int nod, SMTNode j1) {
-		int subtreeSize = j1.getSubtreeSize();
+	public double getCost(int nod, SMTLink j1) {
+		int subtreeSize = j1.getSubtreeSize(this.id); // passing in this.id,
+		// if this.id is the id1 (start) of link, then it gets the subtree size, else it gets the "opposite" subtree size
 		
-		return subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
+		this.nodeCost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
+		return this.nodeCost;
 	}
 
-	private int getSubtreeSize() {
-		// TODO ?
-		return 0;
-	}
+	
 
 
 }
