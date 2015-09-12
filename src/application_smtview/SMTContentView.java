@@ -586,6 +586,7 @@ public class SMTContentView extends Group {
 
         node.relocate(x + d, y + d);
         relocateLinksConnectedToNode(node, x + d, y + d);
+        updateOutput();
     }
 
 
@@ -623,6 +624,8 @@ public class SMTContentView extends Group {
 
         // Recalculate data
         tree.recalculate(); 
+        updateOutput();
+
         // Redraw tree, cache scroll position
         parent.cacheScroll();
         draw();
