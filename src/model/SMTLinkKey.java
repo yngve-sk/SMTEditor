@@ -2,7 +2,7 @@ package model;
 
 public class SMTLinkKey {
 	
-	private int id1, id2;
+	public int id1, id2;
 	
 	public SMTLinkKey(int id1, int id2) {
 		this.id1 = id1;

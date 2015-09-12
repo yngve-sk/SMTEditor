@@ -794,15 +794,9 @@ public class SharedMulticastTree {
 	
 	
 	private int calculateSubtrees(SMTLinkKey linkKey, int nod) {
-		System.out.println("Link key = " + linkKey);
 		SMTLink link = distinctLinks.get(linkKey);
-		System.out.println("link is nulL??? ");
-		System.out.println(link == null);
-		printDistinctLinks();
-		System.out.println("link = " + link);
-		System.out.println("link.id1 = " + link.id1);
-		int id1 = link.id1;
-		int id2 = link.id2;
+		int id1 = linkKey.id1;
+		int id2 = linkKey.id2;
 		
 		SMTNode n2 = nodes.get(id2);
 		
