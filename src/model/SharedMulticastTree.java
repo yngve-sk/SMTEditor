@@ -779,7 +779,13 @@ public class SharedMulticastTree {
 		
 		double myCost = 0;
 		int nod = this.getNumberOfDestinations();
-		calculateSubtrees(findSomeLeafLinkKey(), nod);
+		calculateSubtrees(findSomeLeafLinkKey(), nod, 0);
+		
+		if(!isValidSMT) { // if cycle detected in calculateSubtrees
+			this.cost = -1;
+			return -1;
+		}
+		
 		// subtree size and opposite subtree size should now be stored in each link
 		
 		for(SMTNode n : nodes.values()) 
@@ -793,7 +799,10 @@ public class SharedMulticastTree {
 	}
 	
 	
-	private int calculateSubtrees(SMTLinkKey linkKey, int nod) {
+	private int calculateSubtrees(SMTLinkKey linkKey, int nod, int stack) {
+		if(stack > distinctLinks.values().size()) // cycle detected
+			return -1;
+		
 		SMTLink link = distinctLinks.get(linkKey);
 		int id1 = linkKey.id1;
 		int id2 = linkKey.id2;
@@ -812,7 +821,7 @@ public class SharedMulticastTree {
 		
 		for(Integer i : n2.getNeighboursWithinRange())
 			if((i != id1)) 
-				subtreeSize += calculateSubtrees(new SMTLinkKey(id2, i), nod);
+				subtreeSize += calculateSubtrees(new SMTLinkKey(id2, i), nod, stack + 1);
 		
 		link.setOppositeSubtreeSize(subtreeSize);
 		link.setSubtreeSize(nod - subtreeSize);
