@@ -5,6 +5,7 @@ import java.io.File;
 import application_componentview.SMTComponentView;
 import application_controlsview.ControlsView;
 import application_controlsview.ControlsView.Buttons;
+import application_outputview.InputView.InputViewType;
 import application_outputview.TextOutputView;
 import application_outputview.TextOutputView.OutputFields;
 import application_smtview.SMTView;
@@ -19,6 +20,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -68,12 +70,18 @@ public class SMTEditor extends Scene {
 
     private Slider zoom; /* Modifies the degree of zoom within the scroll pane */
     private Label zoomLabel; /* Shows degree of zoom */
-
+    
+    private Label alpha, kappa; // Displays alpha/kappa
+    
     private final double zoomXRatio = 0.60; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
     private final double zoomWidthRatio = 0.30; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
     private final double zoomYRatio = 0.08; /* Ratio is relative to the scroll pane size, not the SMTEditor itself */
     private final double zoomHeight = 30;
     
+    private final double alphaKappaXRatio = 0.05;
+    private final double alphaKappaYRatio = 0.15;
+    private final double alphaKappaHeightRatio = 0.08;
+   
     private Stage stage;
     private double width, height;
 
@@ -93,6 +101,12 @@ public class SMTEditor extends Scene {
         zoomLabel = new Label("100%");
         zoomLabel.setAlignment(Pos.BASELINE_CENTER);
         zoomLabel.setTextAlignment(TextAlignment.CENTER);
+        
+        alpha = new Label(InputViewType.ALPHA.getString() + " = " + 2);
+        kappa = new Label(InputViewType.KAPPA.getString() + " = " + 2);
+        
+        alpha.setStyle("-fx-font: 24 arial;");
+        kappa.setStyle("-fx-font: 24 arial;");
 
         zoom.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
@@ -138,8 +152,9 @@ public class SMTEditor extends Scene {
         
 		this.setOnDragDropped(event -> drop(event));
 
+		this.setFill(Color.BEIGE);
 
-        root.getChildren().addAll(editor, components, buttons, output, zoom, zoomLabel);
+        root.getChildren().addAll(editor, components, buttons, output, kappa, alpha, zoom, zoomLabel);
     }
     
 	private void drop(DragEvent event) {
@@ -187,7 +202,13 @@ public class SMTEditor extends Scene {
         double zoomX = editorX + editorWidth*zoomXRatio;
         double zoomY = editorY + editorHeight*zoomYRatio;
         double zoomWidth = editorWidth*zoomWidthRatio;
-
+        
+        double alphaKappaX = editorX + alphaKappaXRatio*editorWidth;
+        double alphaKappaY = editorY + alphaKappaXRatio*editorHeight;
+        double alphaKappaHeight = editorHeight*alphaKappaHeightRatio;
+        double alphaY = alphaKappaY + alphaKappaHeight;
+        double alphaKappaWidth = 50; // should be enough
+        
         double componentsX = editorX + editorWidth + width*horizontalPaddingBetweenEditorAndComponentsRatio;
         double componentsY = editorY;
 
@@ -215,6 +236,8 @@ public class SMTEditor extends Scene {
         output.resizeRelocate(outputX, outputY, outputWidth, outputHeight);
         zoom.resizeRelocate(zoomX, zoomY, zoomWidth, zoomHeight);
         zoomLabel.resizeRelocate(zoomX + zoomWidth*0.15, zoomY + zoomHeight, zoomWidth, zoomHeight);
+        kappa.resizeRelocate(alphaKappaX, alphaKappaY, alphaKappaWidth, alphaKappaHeight);
+        alpha.resizeRelocate(alphaKappaX, alphaY, alphaKappaWidth, alphaKappaHeight);
     }
     
     public void updateOutput(SharedMulticastTree tree) {
@@ -243,6 +266,21 @@ public class SMTEditor extends Scene {
 		if(file != null) {
 			SMTParser.writeTreeToFile(tree, file);
 		}
+	}
+
+	public void inputDidChange(double value, InputViewType type) {
+		this.editor.inputDidChange(value, type);
+		
+		getLabelForType(type).setText(type.getString() + " = " + value);
+	}
+	
+	private Label getLabelForType(InputViewType type) {
+		if(type == InputViewType.ALPHA)
+			return this.alpha;
+		else if(type == InputViewType.KAPPA)
+			return this.kappa;
+		else 
+			return null;
 	}
 
 

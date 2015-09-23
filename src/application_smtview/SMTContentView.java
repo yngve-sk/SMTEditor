@@ -23,6 +23,7 @@ import model.SharedMulticastTree;
 import utils.Dictionary;
 import application_componentview.Components;
 import application_controlsview.ControlsView.Buttons;
+import application_outputview.InputView.InputViewType;
 
 
 @SuppressWarnings("unused")
@@ -99,66 +100,9 @@ public class SMTContentView extends Group {
     }
 
 
-//    public void draw() {
-//    	System.out.println("draw");
-//        ObservableList<Node> children = getChildren();
-//        children.clear();
-//        children.add(background);
-//
-//        linkDictionary.clear();
-//        nodeDictionary.clear();
-//
-//        Collection<SMTNode> nodes = tree.getNodes();
-//
-//        HashMap<Integer, Integer> endPointIds = new HashMap<Integer, Integer>();
-//
-//        double d = currentNodeDimension/2;
-//        // Create views out of all the nodes and links
-//        for(SMTNode n : nodes) {
-//            Point2D start = nodeCoordinatesToVisual(n);
-//            Point2D startCenter = start.add(d, d);
-//
-//            SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, start, getCurrentNodeDimension(), n.isDestination);
-//            nodeDictionary.put(n.id, view);
-//
-//            for(SMTNode neighbor : tree.getNeighborsOfNode(n.id)) {
-//                Point2D end = nodeCoordinatesToVisual(neighbor);
-//                Point2D endCenter = end.add(d, d);
-//
-//                SMTLink link = new SMTLink(n.id, neighbor.id);
-//                if(!linkDictionary.containsKey(link)) {
-//                    SMTLinkView linkView = SMTLinkViewFactory.newLinkView(startCenter, n.id, endCenter, neighbor.id);
-//                    linkDictionary.put(link, linkView);
-//
-//                    view.addLink(neighbor.id, true);
-//                    endPointIds.put(neighbor.id, n.id);
-//                }
-//            }
-//        }
-//
-//        for(Integer i : endPointIds.keySet())
-//            nodeDictionary.get(i).addLink(endPointIds.get(i), false);
-//
-//        // Add views to children
-//        children.addAll(linkDictionary.values());
-//        children.addAll(nodeDictionary.values());
-//
-//        // Add stats popup
-//        children.add(statsPopup);
-//        // Refresh output view
-//        SMTEditor editor = (SMTEditor) getScene();
-//        editor.updateOutput(tree);
-//    }
-//
-//    private Point2D nodeCoordinatesToVisual(SMTNode node) {
-//        return new Point2D(transformCoordinateValueFromModelToVisual(node.getX()),
-//                           transformCoordinateValueFromModelToVisual(node.getY())
-//                           );
-//    }
 
     public void draw() {
     	isUpdating = true; // block mouse actions
-    	System.out.println("draw");
         getChildren().retainAll(background, statsPopup, phantom);
         ObservableList<Node> children = getChildren();
 //        children.add(background);
@@ -347,7 +291,6 @@ public class SMTContentView extends Group {
     		return;
     	
     	if(componentType == Components.LINK && isLinking) {
-        //  System.out.println("SMTContentView.mouseOver(" + coordinate.toString() + ")");
             linkInProgress.setEndX(coordinate.getX());
             linkInProgress.setEndY(coordinate.getY());
             return;
@@ -362,8 +305,20 @@ public class SMTContentView extends Group {
         nodeScale = (1.0*percentage/100.0);
         double ratio = nodeScale/previousNodeScale;
 
+        
         for(Node n : getChildren())
-            if(n instanceof SMTNodeView || n == phantom) {
+        	if(n == phantom) {
+        		ImageView phantom = (ImageView) n;
+                double x = n.getLayoutX()*ratio;
+                double y = n.getLayoutY()*ratio;
+                double width = n.getLayoutBounds().getWidth()*ratio;
+                double height = n.getLayoutBounds().getHeight()*ratio;
+
+                phantom.resizeRelocate(x, y, width, height);
+                phantom.setFitWidth(width);
+                phantom.setFitHeight(height);
+        	}
+        	else if(n instanceof SMTNodeView) {
                 double x = n.getLayoutX()*ratio;
                 double y = n.getLayoutY()*ratio;
                 double width = n.getLayoutBounds().getWidth()*ratio;
@@ -414,7 +369,7 @@ public class SMTContentView extends Group {
     	selectedNode = null;
     }
 
-    public void mouseClicked() { //System.out.println("SMTContentView.mouseClicked() ");
+    public void mouseClicked() { 
     	if(isUpdating)
     		return;
     	
@@ -422,7 +377,6 @@ public class SMTContentView extends Group {
         if(componentType.isNode() && tree == null) {
             tree = SMTFactory.emptyTree();
             updateOutput();
-         // System.out.println("New tree created, node placed");
         }
 
         if(componentType == Components.CURSOR) {
@@ -430,10 +384,9 @@ public class SMTContentView extends Group {
         }
         else if(componentType.isNode())
         	addNode();
-        else if(componentType == Components.LINK) { //System.out.println("Component type is link... selected Node = " + selectedNode);
+        else if(componentType == Components.LINK) {
             if(isLinking) { // A center node is set, link center node to selected node and isLinking to false
                 if(selectedNode == null) { // remove the node in progress and reset the stuff
-                  //System.out.println("selectedNode is null, reseting!");
                     getChildren().remove(linkInProgress);
                     resetLinkInProgress();
                 }
@@ -492,7 +445,7 @@ public class SMTContentView extends Group {
     		return;
     	isUpdating = true;
         double d = getCurrentNodeDimension()/2;
-        System.out.println("Anchoring link!");
+
         Point2D coordinates = selectedNode.getCoordinatesWithinParent();
         Point2D centerCoordinates = coordinates.add(d, d); // anchor at center of node
 
@@ -759,6 +712,16 @@ public class SMTContentView extends Group {
 	public void saveButtonClicked() {
 		SMTEditor editor = (SMTEditor) getScene();
 		editor.saveTree(tree);
+	}
+
+
+	public void inputDidChange(double value, InputViewType type) {
+		// update tree etc
+		if(tree == null)
+			return;
+		
+		tree.updateValue(value, type);
+		updateOutput();
 	}
 
 

@@ -2,6 +2,7 @@ package application_outputview;
 
 import application.SMTEditor;
 import application_componentview.Components;
+import application_outputview.InputView.InputViewType;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -29,7 +30,8 @@ public class TextOutputView extends Group {
 	private final String treeExamplePath = "images/tree-example.png";
 	private final String clockPath = "images/clock.png";
 	
-	private Button right; // save
+	private InputView alpha, kappa;
+	private Button save; // save
 	
 	
 	public TextOutputView() {
@@ -49,10 +51,12 @@ public class TextOutputView extends Group {
 		calculationTime = new OutputField(clockPath, "Calc time");
 		middle.getChildren().addAll(numNodes, numLinks, numDestinations, numNonDestinations, calculationTime);
 				
-		right = new Button("Save Tree");
-		right.setOnMouseClicked(event -> save());
+		kappa = new InputView(InputViewType.KAPPA);
+		alpha = new InputView(InputViewType.ALPHA);
+		save = new Button("Save Tree");
+		save.setOnMouseClicked(event -> save());
 		
-		getChildren().addAll(left, middle, right);
+		getChildren().addAll(left, middle, kappa, alpha, save);
 	}
 	
 	private void save() {
@@ -82,9 +86,18 @@ public class TextOutputView extends Group {
 		
 		middle.relocate(boxWidth, 0);
 		
-		right.resizeRelocate(1.5*boxWidth, 0, height, width - 2*boxWidth);
-		right.setPrefWidth(width - 2*boxWidth);
-		right.setPrefHeight(width - 2*boxWidth);
+		double rightX = 1.5*boxWidth;
+		double rightWidth = width - 2*boxWidth;
+		double rightHeight = height/3;
+		
+		kappa.resizeRelocate(rightX, 0, rightWidth, rightHeight/2);
+		alpha.resizeRelocate(rightX, rightHeight/2, rightWidth, rightHeight/2);
+		
+		save.resizeRelocate(rightX, rightHeight, rightWidth, rightHeight);
+		save.setPrefWidth(rightWidth);
+		save.setPrefHeight(rightHeight);
+		save.setMinWidth(rightWidth);
+		save.setMinHeight(rightHeight);
 	}
 	
 	/**

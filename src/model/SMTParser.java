@@ -94,7 +94,6 @@ public class SMTParser {
             List<Point2D> coordinates = new ArrayList<Point2D>();
             for(int i = 0; i < numNodes; i++) {
                 line = removeComments(reader.readLine());
-                System.out.println("Line = " + line);
                 coordinates.add(parseCoordinate(line));
             }
 
@@ -217,7 +216,6 @@ public class SMTParser {
 			
 			writer.println();
 			writer.println(Delimiters.NEIGHBORS_START.getStringValue());
-			System.out.println(allDestinations.size());
 			
 			for(int i = 0; i < allDestinations.size(); i++) {
 				SMTNode current = allDestinations.get(i);

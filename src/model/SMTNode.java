@@ -65,6 +65,8 @@ public abstract class SMTNode {
 	    this.nodeCost = 0;
 	    this.highestPowerLevel = 0;
 	    this.lowestPowerLevel = 0;
+	    this.mostDistant = -1;
+	    this.secondMostDistant = -1;
 	    allLinks.clear();
 	    updateLinks();
     }
@@ -126,11 +128,13 @@ public abstract class SMTNode {
 	/**
 	 * Stores the power levels in the node
 	 * @param powerLevels
-	 *     the power levels, highest power level at index 1, next highest at index 0
+	 *     the power levels, highest power level at index 0, next highest at index 1
 	 */
-	void setPowerLevels(double[] powerLevels) {
-	    highestPowerLevel = utils.Math.trim(powerLevels[1]);
-	    lowestPowerLevel = utils.Math.trim(powerLevels[0]);
+	void setPowerLevels(double[] powerLevels) throws IllegalArgumentException {
+		if(powerLevels[0] != -1 && powerLevels[0] < powerLevels[1])
+			throw new IllegalArgumentException("FROM NODE " + this.id + "Invalid power levels, expected biggest at index 0");
+	    highestPowerLevel = utils.Math.trim(powerLevels[0]);
+	    lowestPowerLevel = utils.Math.trim(powerLevels[1]);
 	}
 
 	/**
@@ -242,6 +246,18 @@ public abstract class SMTNode {
 	int getSecondMostDistant() {
 		return secondMostDistant;
 	}
+	
+	/**
+	 * Reverses the link to node with given id, this is done to keep the data up to sync with the
+	 * way it's presented as a set of distinct links.
+	 * @param id
+	 */
+	public void reverseLinkTo(int id) {
+		SMTLink reverse = new SMTLink(id, this.id);
+		this.allLinks.remove(reverse);
+		this.allLinks.add(reverse);
+	}
+	
 	/************ COST ALGORITHM ************/
 	public double getCost(int nod, SMTLink j1) {
 		int subtreeSize = j1.getSubtreeSize(this.id); // passing in this.id,
@@ -250,6 +266,8 @@ public abstract class SMTNode {
 		this.nodeCost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
 		return this.nodeCost;
 	}
+
+
 
 	
 

@@ -16,7 +16,6 @@ public class Dictionary<K, V> {
     }
 
     public void put(K key, V value) {
-        System.out.println("Put " + key + " , " + value);
         if(keys.contains(key)) {
             return;
         }

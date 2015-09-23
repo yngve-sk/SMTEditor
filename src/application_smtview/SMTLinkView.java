@@ -109,7 +109,6 @@ public class SMTLinkView extends Line {
     double getLength() {
         double dx = this.getEndX() - this.getStartX();
         double dy = this.getEndY() - this.getStartY();
-
         return Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
     }
 
@@ -131,5 +130,9 @@ public class SMTLinkView extends Line {
     
     private SMTContentView getContentView() {
     	return (SMTContentView) this.getParent();
+    }
+    
+    public String toString() {
+    	return "Link from " + startId + " to " + endId + " with graphical length " + getLength();
     }
 }

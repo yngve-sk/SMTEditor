@@ -102,48 +102,6 @@ public class SMTTest {
 		assertEquals(1, smt.getAllDistinctLinks().size());
 	}
 	
-// Stackoverflow, most likely due to invalid tree
-//	@Test
-//	public void testLinkCountIsConsistentWithNeighbors() {
-//		SharedMulticastTree tree = SMTFactory.emptyTree();
-//		IdTracker.reset();
-//
-//		tree.addNode(5, 5, true, 0, null);
-//		tree.addNode(10, 10, true, 1, null);
-//		tree.addNode(15, 15, true, 2, null);
-//		tree.addNode(20, 20, true, 3, null);
-//		
-//		assertEquals(4, tree.getNodes().size());
-//
-//		tree.addLink(0, 1);
-//		assertEquals(tree.getAllDistinctLinks().size(), 1);
-//
-//		tree.addLink(1, 2);
-//		assertEquals(tree.getAllDistinctLinks().size(), 2);
-//		
-//		tree.addLink(2, 3);
-//		assertEquals(tree.getAllDistinctLinks().size(), 3);
-//		
-//		tree.addLink(3, 0);
-//		assertEquals(tree.getAllDistinctLinks().size(), 4);
-//		
-//		tree.removeLink(1, 0);
-//		assertEquals(tree.getAllDistinctLinks().size(), 3);
-//		assertFalse(tree.getAllDistinctLinks().contains(new SMTLink(0,1)));
-//		
-//		tree.removeLink(2, 1);
-//		assertEquals(tree.getAllDistinctLinks().size(), 2);
-//		assertFalse(tree.getAllDistinctLinks().contains(new SMTLink(2,1)));
-//
-//		tree.removeLink(3, 2);
-//		assertEquals(tree.getAllDistinctLinks().size(), 1);
-//		assertFalse(tree.getAllDistinctLinks().contains(new SMTLink(3,2)));
-//
-//		tree.removeLink(0, 3);
-//		assertEquals(tree.getAllDistinctLinks().size(), 0);
-//		assertFalse(tree.getAllDistinctLinks().contains(new SMTLink(0,3)));
-//	}
-//	
 	@Test
 	public void testNodeNeighborListsAreUpdatedWhenLinksAreAddedToTree() {
 		SharedMulticastTree tree = SMTFactory.emptyTree();

@@ -12,6 +12,7 @@ import java.io.File;
 
 import application_componentview.Components;
 import application_controlsview.ControlsView.Buttons;
+import application_outputview.InputView.InputViewType;
 
 /**
  * Contains the SMTContentView
@@ -203,6 +204,10 @@ public class SMTView extends ScrollPane {
 
 	public void saveButtonClicked() {
 		content.saveButtonClicked();
+	}
+
+	public void inputDidChange(double value, InputViewType type) {
+		this.content.inputDidChange(value, type);
 	}
 
 }

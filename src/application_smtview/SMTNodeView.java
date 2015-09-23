@@ -58,7 +58,6 @@ public abstract class SMTNodeView extends ImageView {
     }
 
     private List<SMTLinkView> getAllLinkViews() {
-
         return getContentView().getLinkViews(getAllLinks());
     }
 
@@ -94,7 +93,7 @@ public abstract class SMTNodeView extends ImageView {
     private void highlightAllLinks() {
         if(links.isEmpty())
             return;
-
+                
         SMTLinkViewFilter filter = new SMTLinkViewFilter();
         for(SMTLinkView link : getAllLinkViews()) {
             link.highlight();
@@ -103,9 +102,9 @@ public abstract class SMTNodeView extends ImageView {
 
         SMTLinkView[] highestTwo = filter.getHighestTwo();
         if(highestTwo[0] != null)
-            highestTwo[0].highlightAsPowerLevelTwo();
+            highestTwo[0].highlightAsPowerLevelOne();
         if(highestTwo[1] != null)
-            highestTwo[1].highlightAsPowerLevelOne();
+            highestTwo[1].highlightAsPowerLevelTwo();
     }
 
     /**
@@ -191,14 +190,6 @@ public abstract class SMTNodeView extends ImageView {
         return localToParent(getX(), getY());
     }
 
-// @deprecated, this should be done from content view directly to model
-//    public void updateModelCoordinates(
-//            double modelX,
-//            double modelY) {
-//        System.out.println("updateModelCoordinates x y = (" + modelX + ", " + modelY + ")");
-//        nodeId.setX(modelX);
-//        nodeId.setY(modelY);
-//    }
 
     private class SMTLinkViewFilter {
 
@@ -221,8 +212,13 @@ public abstract class SMTNodeView extends ImageView {
             if(highest == null)
                 highest = link;
             else if(secondHighest == null)
-                secondHighest = link;
-
+            	if(highest.getLength() < link.getLength()) {            		
+            		secondHighest = highest;
+            		highest = link;
+            	}
+            	else 
+            		secondHighest = link;
+            
             else {
                 if(highest.getLength() < link.getLength()) {
                     secondHighest = highest;
@@ -235,11 +231,11 @@ public abstract class SMTNodeView extends ImageView {
         }
 
         /**
-         * Gets the two highest, highest at index 1
+         * Gets the two highest, highest at index 0
          * @return
          */
         public SMTLinkView[] getHighestTwo() {
-            SMTLinkView[] highestTwo = {secondHighest, highest};
+            SMTLinkView[] highestTwo = {highest, secondHighest};
             return highestTwo;
         }
     }

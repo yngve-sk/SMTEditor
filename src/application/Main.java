@@ -19,6 +19,7 @@ public class Main extends Application {
 		    SMTEditor editorScene = new SMTEditor(new Group(),  screenSize.width,  screenSize.height, primaryStage);
 			primaryStage.setScene(editorScene);
 			primaryStage.show();
+			primaryStage.setTitle("Shared Multicast Tree Editor");
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

@@ -5,7 +5,11 @@ import java.util.Collection;
 import utils.Dictionary;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
+import com.sun.javafx.image.impl.ByteIndexed.Getter;
+
+import application_outputview.InputView.InputViewType;
 import application_outputview.TextOutputView.OutputFields;
 import javafx.geometry.Point2D;
 
@@ -23,6 +27,7 @@ public class SharedMulticastTree {
 	private double calculationTime;
 	
 	private int numberOfDestinations;
+	private double kappa = 2, alpha = 3;
 
 	/**
 	 * Initializes a SMT
@@ -78,7 +83,7 @@ public class SharedMulticastTree {
 
 		nodes.get(id1).addNeighbor(id2);
 	    nodes.get(id2).addNeighbor(id1);
-	    distinctLinks.put(newLinkKey, newLink);
+	   // distinctLinks.put(newLinkKey, newLink);
 	    recalculate();
 	}
 
@@ -113,6 +118,9 @@ public class SharedMulticastTree {
 	    		SMTLinkKey key = new SMTLinkKey(l.id1, l.id2);
 	    		if(!distinctLinks.containsKey(key))
 	    			distinctLinks.put(key, l);
+	    		else {
+	    			nodes.get(l.id2).reverseLinkTo(l.id1);
+	    		}
 	    	}
 	    
 	}
@@ -201,7 +209,6 @@ public class SharedMulticastTree {
 	 * @return
 	 */
     public SMTNode getNode(int id) {
-//      System.out.println("SharedMultiCastTree.getNode(" + senderId + "), IdTracker.getNextId() - 1 = " + (IdTracker.getNextNodeId() - 1) );
         return nodes.get(id);
     }
 
@@ -278,18 +285,20 @@ public class SharedMulticastTree {
 	 *
 	 * @param id
 	 * @return
-	 *     gets the two power levels of the node.
+	 *     gets the two power levels of the node. Highest at index 0, second highest at index 1
 	 */
 	private double[] getPowerLevels(Integer id) {
-	    // 1. Find all nodes linked to n
-	    List<Integer> neighbors = nodes.get(id).getNeighboursWithinRange();
+	    double[] powerLevels = {-1,-1};
+	    int[] mostDistant = twoMostDistant(id);
+	    System.out.println("mostDistant = " + mostDistant[0] + ", " + mostDistant[1]);
 
-	    // 2. Calculate distance between n and all sMTNodes, store highest two distances
-	    PowerFilter filter = new PowerFilter(); // run all distances through filter, highest two will remain
-	    for(Integer nodeId : neighbors)
-	        filter.runThroughFilter(getDistanceBetween(id, nodeId));
+	    if(mostDistant[0] != -1)
+	    	powerLevels[0] = powerCost(id, mostDistant[0]);
+	    
+	    if(mostDistant[1] != -1)
+	    	powerLevels[1] = powerCost(id, mostDistant[1]);
 
-	    return filter.getHighestTwo();
+	    return powerLevels;
 	}
 
 	/**
@@ -309,11 +318,11 @@ public class SharedMulticastTree {
 	}
 
 	/**
-	 *
+	 * <code>p_ij = kappa*(dist_ij)^alpha</code>
 	 * @param n1
 	 * @param n2
 	 * @return
-	 *  	The power cost of the transmission
+	 *  	The power cost of the transmission, taking kappa and gamma into consideration.
 	 */
 	private double powerCost(int n1, int n2) {
 	    SMTNode node1 = nodes.get(n1);
@@ -324,22 +333,9 @@ public class SharedMulticastTree {
 
 	    double dist = Math.sqrt(Math.pow(lx, 2) + Math.pow(ly, 2));
 
-		return dist;
+		return kappa*Math.pow(dist, alpha);
 	}
-
-//	/**
-//	 *
-//	 * @param sender
-//	 * @param receiver
-//	 * @return
-//	 *  	true if receiver is within senders range
-//	 */
-//	private boolean isWithinRange(SMTNode sender, SMTNode receiver) {
-//		return sender.getNeighboursWithinRange().contains(receiver);
-//	}
-
-
-
+	
 
 	/**
 	 *
@@ -364,99 +360,44 @@ public class SharedMulticastTree {
 		        filter.runThroughFilter(nodes.get(neighborId));
 
 		    mostDistant[0] = filter.getTwoMostDistantNodes()[0].id;
-		    mostDistant[0] = filter.getTwoMostDistantNodes()[1].id;
+		    mostDistant[1] = filter.getTwoMostDistantNodes()[1].id;
 		}
 
 		return mostDistant;
 	}
 
-	/**
-    *
-    * @param id1
-    * @param id2
-    * @return
-    */
-   private Subtree arc(int id1, int id2) {
-       return null; // TODO
-   }
 
-
-   /**
-    * Gets the subtree of a node
-    * @param id
-    * @return
-    */
-   private Subtree arc(int id) {
-       return null; // TODO
-   }
-
-
-	/**
-	 *
-	 * @param id
-	 * @return
-	 *     the cost of n
-	 */
-	private double getCost(int id) {
-	    return 0; // TODO
-	    /*
-		int numberOfDestinationsSubtree = arc(id).size();
-
-		if(numberOfDestinationsSubtree == 0)
-		    return 0;
-
-		SMTNode[] mostDistantN = twoMostDistant(id);
-		double costMostDistant = powerCost(id, mostDistantN[1].id);
-		double costSecondMostDistant = powerCost(id, mostDistantN[0].id);
-
-		int numberOfDestinationsTree = nodes.size() - numberOfDestinationsSubtree; // TODO not sure if right
-
-		double result = numberOfDestinationsSubtree*costSecondMostDistant + numberOfDestinationsTree*costMostDistant;
-
-		return result; */
-	}
-
-	/**
-	 * Calculates the total cost
-	 */
-	private void calculateTotalCost() {
-		double sum = 0;
-		for(SMTNode n : nodes.values())
-			sum += n.getNodeCost();
-		this.cost = sum;
-	}
-
-	/**
-	 * Class to represent a subtree with minimal functionality
-	 * @author Yngve Sekse Kristiansen
-	 *
-	 */
-	private class Subtree {
-		private List<SMTNode> nodes;
-
-		/**
-		 * Initializes a new subtree
-		 * @param nodes
-		 *    the list of sMTNodes, can't be null or empty
-		 */
-		public Subtree(List<SMTNode> nodes) {
-			this.nodes = nodes;
-		}
-
-		public Subtree() {
-		    // empty subtree
-		}
-
-        /**
-		 *
-		 * @return
-		 *    The number of sMTNodes in the tree
-		 */
-		int size() {
-		    return (nodes == null) ? 0 : nodes.size();
-		}
-	}
-
+//	/**
+//	 * Class to represent a subtree with minimal functionality
+//	 * @author Yngve Sekse Kristiansen
+//	 *
+//	 */
+//	private class Subtree {
+//		private List<SMTNode> nodes;
+//
+//		/**
+//		 * Initializes a new subtree
+//		 * @param nodes
+//		 *    the list of sMTNodes, can't be null or empty
+//		 */
+//		public Subtree(List<SMTNode> nodes) {
+//			this.nodes = nodes;
+//		}
+//
+//		public Subtree() {
+//		    // empty subtree
+//		}
+//
+//        /**
+//		 *
+//		 * @return
+//		 *    The number of sMTNodes in the tree
+//		 */
+//		int size() {
+//		    return (nodes == null) ? 0 : nodes.size();
+//		}
+//	}
+//
 
 
 	/**
@@ -495,10 +436,10 @@ public class SharedMulticastTree {
 	     *
 	     * @return
 	     *     The highest two values retained in the filter.
-	     *     The highest value at index 1, second highest at index 0
+	     *     The highest value at index 0, second highest at index 1
 	     */
 	    public double[] getHighestTwo() {
-	        double[] highestTwo = {secondHighest, highest};
+	        double[] highestTwo = {highest, secondHighest};
 	        return highestTwo;
 	    }
 	}
@@ -538,8 +479,8 @@ public class SharedMulticastTree {
 	private String getLongestLink() {
 		// Same as highest power level
 		double highest = 0;
-		for(SMTNode n : this.nodes.values()) {
-			double p = n.getHighestPowerLevel();
+		for(SMTLink l : this.distinctLinks.values()) {
+			double p = getDistanceBetween(l.id1, l.id2);
 			if(p > highest)
 				highest = p;
 		}
@@ -616,16 +557,16 @@ public class SharedMulticastTree {
 			return null;
 		
 		double highest = 0;
-		SMTNode leader = null;
-		for(SMTNode n : this.nodes.values()) {
-			double p = n.getHighestPowerLevel();
-			if(p > highest) {
-				highest = p;
-				leader = n;
+		SMTLink leader = null;
+		for(SMTLink l : this.distinctLinks.values()) {
+			double d = getDistanceBetween(l.id1, l.id2);
+			if(d > highest) {
+				highest = d;
+				leader = l;
 			}
 		}
 			
-		return new SMTLink(leader.id, twoMostDistant(leader.id)[1]);
+		return leader;
 	}
 
 	public void removeLinks() {
@@ -687,10 +628,10 @@ public class SharedMulticastTree {
 	    private SMTNode origin;
 
 	    private SMTNode furthest;
-	    private double furthestDistance;
+	    private double furthestDistance = 0;
 
 	    private SMTNode nextFurthest;
-	    private double nextFurthestDistance;
+	    private double nextFurthestDistance = 0;
 
 	    /**
 	     * Initializes a new filter, taking in origin node
@@ -712,27 +653,22 @@ public class SharedMulticastTree {
         /**
 	     * Runs a node through the filter, retains it if its distance is greater than the next biggest
 	     * distance currently being retained
-	     * @param neighbor
-	     *     the neighbor
+	     * @param node
+	     *     the node
 	     */
-	    public void runThroughFilter(SMTNode neighbor) {
-	        if(furthest == null) {
-	            furthest = neighbor;
-	            furthestDistance = distanceTo(neighbor);
-	        }
-	        else if(nextFurthest == null) {
-	            nextFurthest = neighbor;
-	            furthestDistance = distanceTo(neighbor);
-	        }
+	    public void runThroughFilter(SMTNode node) {
 
-	        double dist = distanceTo(neighbor);
-
+	        double dist = distanceTo(node);
+	        
 	        if(dist > furthestDistance) {
-	            furthest = neighbor;
+	        	nextFurthest = furthest;
+	        	nextFurthestDistance = furthestDistance;
+	        	
+	        	furthest = node;
 	            furthestDistance = dist;
 	        }
-	        else if(dist < nextFurthestDistance && dist < furthestDistance) {
-	            nextFurthest = neighbor;
+	        else if(dist > nextFurthestDistance && dist < furthestDistance) {
+	            nextFurthest = node;
 	            nextFurthestDistance = dist;
 	        }
 	    }
@@ -856,34 +792,105 @@ public class SharedMulticastTree {
 	}
 	
 	public void validate() {
-		if(this.nodes.size() <= this.distinctLinks.values().size()) { // Cycle detected
-			isValidSMT =false;
+		int numNodes = this.nodes.size();
+		int numLinks = this.distinctLinks.values().size();
+		int numLeafs = 0;
+		int singletons = 0;
+		
+		if(numNodes <= numLinks) { // Cycle detected
+			isValidSMT = false;
 			return;
 		}
 		
-		int numLeafs = 0;
-		for(SMTNode n : this.nodes.values()) // No non-destination leaves
-			if(n.getNeighboursWithinRange().size() == 1) {
-				if(!n.isDestination) {
+		for(SMTNode n : this.nodes.values()) {
+			if(n.getNeighboursWithinRange().size() == 0) {
+				if(n.isDestination) {
 					isValidSMT = false;
 					return;
 				}
-				else {
-					numLeafs++;
-				}
+				singletons++;
 			}
+			
+			if(n.getNeighboursWithinRange().size() == 1) 
+					numLeafs++;
+		}
+				
+		if(numLinks >= numNodes - singletons) {
+			isValidSMT = false;
+			return;
+		}
 		
 		if(numLeafs == 0) {
 			isValidSMT = false;
 			return;
 		}
 		
+		
 		if(distinctLinks.isEmpty()) {
 			isValidSMT = false;
 			return;
 		}			
 		
+		if(!isAllDestinationsConnected()) {
+			isValidSMT = false;
+			return;
+		}
+			
+		
 		isValidSMT = true;
+	}
+	
+	private boolean isAllDestinationsConnected() {
+		// 1. Find a destination leaf
+		SMTNode start = null;;
+		for(SMTNode n : this.nodes.values())
+			if(n.isDestination && n.getAllLinks().size() == 1) {
+				start = n;
+				break;
+			}
+		
+		if(start == null)
+			return false;
+		
+		// 2. Do a dfs from n and count up num destinations
+		Stack<SMTNode> stack = new Stack<SMTNode>();
+		Stack<SMTNode> unvisited = new Stack<SMTNode>();
+		for(SMTNode n : nodes.values())
+			unvisited.add(n);
+		
+		stack.push(start);
+		unvisited.remove(start);
+		
+		int count = 1;
+		
+		while(!stack.isEmpty()) {
+			SMTNode current = stack.pop();
+			
+			for(Integer i : current.getNeighboursWithinRange()) {
+				SMTNode neighbor = nodes.get(i);
+				
+				if(!unvisited.contains(neighbor))
+					continue;
+				
+				stack.push(neighbor);
+				unvisited.remove(neighbor);
+				
+				if(neighbor.isDestination)
+					count++;
+			}	
+		}
+		return count == getAllDestinations().size();
+	}
+
+
+
+	public void updateValue(double value, InputViewType type) {
+		if(type == InputViewType.ALPHA)
+			this.alpha = value;
+		else if(type == InputViewType.KAPPA)
+			this.kappa = value;
+		
+		recalculate();
 	}
 	
 }
