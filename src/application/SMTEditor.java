@@ -102,8 +102,8 @@ public class SMTEditor extends Scene {
         zoomLabel.setAlignment(Pos.BASELINE_CENTER);
         zoomLabel.setTextAlignment(TextAlignment.CENTER);
         
-        alpha = new Label(InputViewType.ALPHA.getString() + " = " + 2);
-        kappa = new Label(InputViewType.KAPPA.getString() + " = " + 2);
+        alpha = new Label(InputViewType.ALPHA.getString() + " = " + SharedMulticastTree.ALPHA_DEFAULT);
+        kappa = new Label(InputViewType.KAPPA.getString() + " = " + SharedMulticastTree.KAPPA_DEFAULT);
         
         alpha.setStyle("-fx-font: 24 arial;");
         kappa.setStyle("-fx-font: 24 arial;");

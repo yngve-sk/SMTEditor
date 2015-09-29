@@ -21,13 +21,15 @@ import javafx.geometry.Point2D;
  */
 public class SharedMulticastTree {
 
+	public static final int KAPPA_DEFAULT = 1, ALPHA_DEFAULT = 2;
+	
 	private HashMap<Integer, SMTNode> nodes;
 	private double cost;
 	private Dictionary<SMTLinkKey, SMTLink> distinctLinks;
 	private double calculationTime;
 	
 	private int numberOfDestinations;
-	private double kappa = 2, alpha = 3;
+	private double kappa = KAPPA_DEFAULT, alpha = ALPHA_DEFAULT;
 
 	/**
 	 * Initializes a SMT
@@ -290,7 +292,6 @@ public class SharedMulticastTree {
 	private double[] getPowerLevels(Integer id) {
 	    double[] powerLevels = {-1,-1};
 	    int[] mostDistant = twoMostDistant(id);
-	    System.out.println("mostDistant = " + mostDistant[0] + ", " + mostDistant[1]);
 
 	    if(mostDistant[0] != -1)
 	    	powerLevels[0] = powerCost(id, mostDistant[0]);
@@ -712,6 +713,11 @@ public class SharedMulticastTree {
 	/************ COST ALGORITHM ************/
 	
 	public double evaluate() {
+		if(isValidButNotLinked()) {
+			System.out.println("Valid but not linked");
+			this.cost = 0;
+			return 0;
+		}
 		
 		double myCost = 0;
 		int nod = this.getNumberOfDestinations();
@@ -721,14 +727,27 @@ public class SharedMulticastTree {
 		for(SMTNode n : nodes.values()) 
 			if(n.getMostDistant() != -1) { // same as if j has neighbors or not?
 				SMTLinkKey linkKey = new SMTLinkKey(n.id, n.getMostDistant());
-				double nCost = n.getCost(nod, distinctLinks.get(linkKey));  // pass link with subtree info to node
-				myCost += n.getCost(nod, distinctLinks.get(linkKey));
+				if(!( !n.isDestination && n.isLeaf() )) { // if n isn't a non-destination leaf
+					double nCost = n.getCost(nod, distinctLinks.get(linkKey));  // pass link with subtree info to node
+					myCost += nCost;
+				}
 			}
+		
+		updateAllNonDestinationLeaves(myCost);
+		
 		this.cost = myCost;
 		return myCost;
 	}
 	
 	
+	private void updateAllNonDestinationLeaves(double myCost) {
+		for(SMTNode n : getAllNonDestinations())
+			if(n.isLeaf())
+				n.setNodeCost(myCost);
+	}
+
+
+
 	private int calculateSubtrees(SMTLinkKey linkKey, int nod) {
 		SMTLink link = distinctLinks.get(linkKey);
 		int id1 = linkKey.id1;
@@ -741,7 +760,7 @@ public class SharedMulticastTree {
 			subtreeSize = 1;
 		
 		if(n2.getNeighboursWithinRange().size() == 1) {
-			link.setOppositeSubtreeSize(subtreeSize); // 
+			link.setOppositeSubtreeSize(subtreeSize); 
 			link.setSubtreeSize(nod - subtreeSize);
 			return subtreeSize;
 		}
@@ -749,7 +768,7 @@ public class SharedMulticastTree {
 		for(Integer i : n2.getNeighboursWithinRange())
 			if((i != id1)) 
 				subtreeSize += calculateSubtrees(new SMTLinkKey(id2, i), nod);
-		
+			
 		link.setOppositeSubtreeSize(subtreeSize);
 		link.setSubtreeSize(nod - subtreeSize);
 		
@@ -802,9 +821,14 @@ public class SharedMulticastTree {
 			return;
 		}
 		
+		if(isValidButNotLinked()) { System.out.println("isValidButNotLinked()");
+			isValidSMT = true;
+			return;
+		}
+		
 		for(SMTNode n : this.nodes.values()) {
 			if(n.getNeighboursWithinRange().size() == 0) {
-				if(n.isDestination) {
+				if(n.isDestination) { System.out.println("if(n.isDestination)");
 					isValidSMT = false;
 					return;
 				}
@@ -815,23 +839,23 @@ public class SharedMulticastTree {
 					numLeafs++;
 		}
 				
-		if(numLinks >= numNodes - singletons) {
+		if(numLinks >= numNodes - singletons) { System.out.println("numLinks >= numNodes - singletons");
 			isValidSMT = false;
 			return;
 		}
 		
-		if(numLeafs == 0) {
+		if(numLeafs == 0) { System.out.println("numLeafs == 0");
 			isValidSMT = false;
 			return;
 		}
 		
 		
-		if(distinctLinks.isEmpty()) {
+		if(distinctLinks.isEmpty()) { System.out.println("distinctLinks.isEmpty()");
 			isValidSMT = false;
 			return;
 		}			
 		
-		if(!isAllDestinationsConnected()) {
+		if(!isAllDestinationsConnected()) { System.out.println("if(!isAllDestinationsConnected())");
 			isValidSMT = false;
 			return;
 		}
@@ -840,11 +864,15 @@ public class SharedMulticastTree {
 		isValidSMT = true;
 	}
 	
+	private boolean isValidButNotLinked() {
+		return this.distinctLinks.isEmpty() && getAllDestinations().size() <= 1;
+	}
+	
 	private boolean isAllDestinationsConnected() {
-		// 1. Find a destination leaf
+		// 1. Find a destination
 		SMTNode start = null;;
 		for(SMTNode n : this.nodes.values())
-			if(n.isDestination && n.getAllLinks().size() == 1) {
+			if(n.isDestination) {
 				start = n;
 				break;
 			}

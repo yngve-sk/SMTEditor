@@ -530,15 +530,18 @@ public class SMTContentView extends Group {
     	if(isUpdating)
     		return;
     	
-        double modelX = transformCoordinateValueFromVisualToModel(x);
-        double modelY = transformCoordinateValueFromVisualToModel(y);
+    	double d = getCurrentNodeDimension()/2;
+    	double visualX = x - d;
+    	double visualY = y - d;
+
+    	double modelX = transformCoordinateValueFromVisualToModel(visualX);
+        double modelY = transformCoordinateValueFromVisualToModel(visualY);
 
         tree.relocateNode(modelX, modelY, node.getNodeId());
 
-        double d = getCurrentNodeDimension()/2;
 
-        node.relocate(x + d, y + d);
-        relocateLinksConnectedToNode(node, x + d, y + d);
+        node.relocate(visualX, visualY);
+        relocateLinksConnectedToNode(node, x, y);
         updateOutput();
     }
 

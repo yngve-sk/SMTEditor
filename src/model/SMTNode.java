@@ -131,20 +131,13 @@ public abstract class SMTNode {
 	 *     the power levels, highest power level at index 0, next highest at index 1
 	 */
 	void setPowerLevels(double[] powerLevels) throws IllegalArgumentException {
-		if(powerLevels[0] != -1 && powerLevels[0] < powerLevels[1])
+		if(powerLevels[1] != -1 && powerLevels[0] < powerLevels[1])
 			throw new IllegalArgumentException("FROM NODE " + this.id + "Invalid power levels, expected biggest at index 0");
-	    highestPowerLevel = utils.Math.trim(powerLevels[0]);
-	    lowestPowerLevel = utils.Math.trim(powerLevels[1]);
+	    highestPowerLevel = utils.Math.trim(powerLevels[0] == -1 ? 0 : powerLevels[0]);
+	    lowestPowerLevel = utils.Math.trim(powerLevels[1] == -1 ? 0 : powerLevels[1]);
 	}
 
-	/**
-	 * Stores the node cost value in the node
-	 * @param nodeCost
-	 *     the node cost
-	 */
-	void setNodeCost(double nodeCost) {
-	    this.nodeCost = nodeCost;
-	}
+
 
 	public double getHighestPowerLevel() {
         return this.highestPowerLevel;
@@ -258,13 +251,32 @@ public abstract class SMTNode {
 		this.allLinks.add(reverse);
 	}
 	
+	public boolean isLeaf() {
+		return this.neighborsWithinRange.size() == 1;
+	}
+	
 	/************ COST ALGORITHM ************/
 	public double getCost(int nod, SMTLink j1) {
+		if(this.allLinks.isEmpty()) {
+			this.nodeCost = 0;
+			return this.nodeCost;
+		}
+						
 		int subtreeSize = j1.getSubtreeSize(this.id); // passing in this.id,
 		// if this.id is the id1 (start) of link, then it gets the subtree size, else it gets the "opposite" subtree size
 		
 		this.nodeCost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
 		return this.nodeCost;
+	}
+	
+	/**
+	 * Stores the node cost value in the node. This is useful on non-destination leaves, which need manual updating
+	 * of value after calculation is done
+	 * @param nodeCost
+	 *     the node cost
+	 */
+	void setNodeCost(double nodeCost) {
+	    this.nodeCost = nodeCost;
 	}
 
 

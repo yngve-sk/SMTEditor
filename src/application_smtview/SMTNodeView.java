@@ -134,13 +134,13 @@ public abstract class SMTNodeView extends ImageView {
             return;
 
         dragInProgress = true;
-        Point2D d = localToParent(me); // dx and dy is subtracted to emulate the node being clicked at its anchor
+        Point2D d = localToParent(me);
         double x = d.getX();
         double y = d.getY();
 
         SMTContentView contentView = getContentView();
         contentView.nodeWasDragged(this, x, y);
-        this.relocate(x, y);
+        highlightAllLinks();
     }
 
     private Point2D localToParent(MouseEvent me) {
