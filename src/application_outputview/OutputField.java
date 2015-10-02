@@ -24,7 +24,7 @@ public class OutputField extends Group {
 		textOutput.setAlignment(Pos.BASELINE_CENTER);
 		
 		getChildren().addAll(icon, textOutput);
-		this.setStringValue("999test");
+		this.setStringValue("N/A");
 	}
 	
 	private void layoutSubviews(double width, double height) {
