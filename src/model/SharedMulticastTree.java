@@ -47,6 +47,8 @@ public class SharedMulticastTree {
 	    if(numberOfDestinations > nodes.size())
 	        throw new IllegalArgumentException("Number of destination = " + numberOfDestinations + ", number of nodes = " + nodes.size());
 
+	    IdTracker.reset();
+	    
 		this.nodes = new HashMap<Integer, SMTNode>();
 		this.numberOfDestinations = numberOfDestinations;
 		

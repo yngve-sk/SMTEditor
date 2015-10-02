@@ -17,7 +17,7 @@ import model.SMTNode;
  * @author Yngve Sekse Kristiansen
  *
  */
-public class StatsView extends Region {
+public class SMTNodeStatsView extends Region {
 
     private Label cost;
     private Label type;
@@ -38,7 +38,7 @@ public class StatsView extends Region {
     /**
      * Initiates a new stats view
      */
-    public StatsView() {
+    public SMTNodeStatsView() {
         super();
 
 //        background = new ImageView(new Image("images/statsviewbackground.jpg"));
@@ -79,7 +79,7 @@ public class StatsView extends Region {
      */
     public void displayNode(SMTNode node) {
     	type.setText(TYPE_STR + node.getType() + " (id = " + node.id + ")");
-        cost.setText(COST_STR + node.getNodeCost());
+        cost.setText(COST_STR + ((node.isLeaf() && !node.isDestination) ? "Non-Destination Leaf" : node.getNodeCost()));
         powerLevelOne.setText(POWER_ONE_STR + node.getHighestPowerLevel());
         powerLevelTwo.setText(POWER_TWO_STR + node.getSecondHighestPowerLevel());
         position.setText(POSITION_STR + node.getPosition());

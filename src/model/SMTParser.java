@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javafx.geometry.Point2D;
@@ -52,7 +53,17 @@ public class SMTParser {
     public static SharedMulticastTree getCachedTree() {
         if(cacheIsEmpty)
             return null;
-        return new SharedMulticastTree(nodes, neighbors, numDestinations);
+        
+        List<List<Integer>> neighborsCopy = new ArrayList<List<Integer>>();
+        List<Point2D> nodesCopy = new ArrayList<Point2D>();
+
+        for(List<Integer> l : neighbors) {
+        	List<Integer> aList = new ArrayList<Integer>();
+        	aList.addAll(l);
+        	neighborsCopy.add(aList);
+        }
+        
+        return new SharedMulticastTree(nodes, neighborsCopy, numDestinations);
     }
 
     /**

@@ -59,7 +59,7 @@ public class SMTContentView extends Group {
     private boolean isDragging = false;
     private SMTNodeView beingDragged;
 
-    private StatsView statsPopup;
+    private SMTNodeStatsView statsPopup;
     private SMTView parent;
 
     private Dictionary<SMTLink, SMTLinkView> linkDictionary;
@@ -72,7 +72,7 @@ public class SMTContentView extends Group {
         currentDimension = 1000;
         currentNodeDimension = 25;
 
-        this.statsPopup = new StatsView();
+        this.statsPopup = new SMTNodeStatsView();
         this.statsPopup.setVisible(false);
 
         this.resize(maxDimension, maxDimension);
@@ -102,6 +102,8 @@ public class SMTContentView extends Group {
 
 
     public void draw() {
+    	if(tree == null)
+    		return;
     	isUpdating = true; // block mouse actions
         getChildren().retainAll(background, statsPopup, phantom);
         ObservableList<Node> children = getChildren();
