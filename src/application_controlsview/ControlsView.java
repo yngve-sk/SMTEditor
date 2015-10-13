@@ -1,122 +1,209 @@
 package application_controlsview;
 
+
 import application.SMTEditor;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Slider;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
 
 public class ControlsView extends Group{
 
 	
 	private VBox left;
-	private CustomButton clear,
-				   removeAllDestinations,
-				   removeAllNonDestinations,
-				   removeAllLinks;
+	private ToggleButton discreteMode;
+	private VBox cellSize;
+	private Label cellSizeLabel;
+	private Slider cellSizeSlider;
+	private CheckBox showNodeId;
+	private LinkOptionsView linkOptions;
 	
 	private VBox right;
-	private CustomButton highlightHeaviestLinks,
-			       destinationsIntoNonDestinations,
-			       nonDestinationsIntoDestinations,
-			       reloadCachedTree;
+	private CustomButton clear,
+			     reloadCachedTree,
+			     removeAllDestinations,
+			     removeAllNonDestinations,
+			     removeAllLinks;
+	
+	final ToggleGroup toggleGroup = new ToggleGroup(); // for radio buttons
+			       
 	
 	final double p = 5; // padding
 
     public ControlsView() {
     	super();
+       
+    	left = new VBox();
+    	discreteMode = new ToggleButton("Enter Discrete Mode");
+    	discreteMode.setOnAction(event -> toggleButtonClicked(ToggleButtons.DISCRETE_MODE, discreteMode.isSelected()));
+
+    	cellSize = new VBox();
+    	cellSizeLabel = new Label("Discrete Mode Cell Size: 1");
+    	cellSizeSlider = new Slider();
+    	cellSizeSlider.setMin(1);
+    	cellSizeSlider.setMax(100);
+    	cellSizeSlider.setMajorTickUnit(1);
+    	cellSizeSlider.setSnapToTicks(true);
+    	cellSizeSlider.valueProperty().addListener(new ChangeListener<Number>() {
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				int intValue = newValue.intValue(); // ugly double "?" but it just makes sure the size remains the same
+				String newText = "Discrete mode cell size : " + intValue;
+				cellSizeLabel.setText(newText);
+			}});
     	
+    	cellSize.getChildren().addAll(cellSizeLabel, cellSizeSlider);
+    	
+    	linkOptions = new LinkOptionsView();
+    	showNodeId = new CheckBox("Show node id");
+    	showNodeId.setOnAction(event -> checkBoxClicked(CheckBoxes.SHOW_NODE_ID, showNodeId.isSelected()));
+    	
+    	left.setSpacing(15);
+    	left.getChildren().addAll(discreteMode, cellSize, linkOptions, showNodeId);
+    	
+    	right = new VBox();
+    	right.setPadding(new Insets(5,5,5,5));
+
     	clear = new CustomButton("Clear");
+    	reloadCachedTree = new CustomButton("Reload latest\ntree file");
+
     	removeAllDestinations = new CustomButton("Remove all\ndestinations");
     	removeAllNonDestinations = new CustomButton("Remove all\nnon-destinations");
     	removeAllLinks = new CustomButton("Remove all\nlinks");
     	
-    	highlightHeaviestLinks = new CustomButton("Highlight\n heaviest links");
-    	destinationsIntoNonDestinations = new CustomButton("Destinations\n->non-destinations");
-    	nonDestinationsIntoDestinations = new CustomButton("Non-destinations\n->destinations");
-    	reloadCachedTree = new CustomButton("Reload latest\ntree file");
-    	Insets padding = new Insets(5, 5, 5, 5);
-    	left = new VBox();
-    	left.setPadding(padding);
-    	
-    	left.getChildren().addAll(clear, removeAllDestinations, removeAllNonDestinations, removeAllLinks);
-    	
-    	right = new VBox();
-    	right.setPadding(padding);
-    	
-    	
-    	right.getChildren().addAll(highlightHeaviestLinks, destinationsIntoNonDestinations, nonDestinationsIntoDestinations, reloadCachedTree);
+    	right.getChildren().addAll(clear, reloadCachedTree, removeAllDestinations, removeAllNonDestinations, removeAllLinks);
     	
     	this.getChildren().addAll(left, right);
     	
     	clear.setOnMouseClicked(event -> buttonClicked(Buttons.CLEAR));
+    	reloadCachedTree.setOnMouseClicked(event -> buttonClicked(Buttons.RELOAD_CACHED_TREE));
     	removeAllDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.REMOVE_DESTINATIONS));
         removeAllNonDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.REMOVE_NONDESTINATIONS)); 
         removeAllLinks.setOnMouseClicked(event -> buttonClicked(Buttons.REMOVE_LINKS));    
-        highlightHeaviestLinks.setOnMouseClicked(event -> buttonClicked(Buttons.HIGHLIGHT_HEAVIEST_LINKS)); 
-        destinationsIntoNonDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.DESTINATIONS_TO_NONDESTINATIONS));
-        nonDestinationsIntoDestinations.setOnMouseClicked(event -> buttonClicked(Buttons.NONDESTINATIONS_TO_DESTINATIONS));
-        reloadCachedTree.setOnMouseClicked(event -> buttonClicked(Buttons.RELOAD_CACHED_TREE));
     }
     
-    public void resizeRelocate(double x, double y, double width, double height) {
+
+
+    private SMTEditor getEditor() {
+    	SMTEditor editor = (SMTEditor) getScene();
+    	return editor;
+    }
+    
+	public void resizeRelocate(double x, double y, double width, double height) {
     	super.resizeRelocate(x, y, width, height);
     	layoutSubviews(width, height);
     }
     
     private void layoutSubviews(double width, double height) {
-    	double CustomButtonPrefWidth = width*0.27 - 2*p;
-    	double CustomButtonPrefHeight = height/6 - 2*p;
-    	
-    	double CustomButtonMinWidth = CustomButtonPrefWidth/2;
-    	double CustomButtonMinHeight = CustomButtonPrefHeight/2;
-    	
-    	double CustomButtonMaxWidth = width - 2*p;
-    	double CustomButtonMaxHeight = height - 2*p;
-    
-    	CustomButton[] allCustomButtons = {clear, removeAllDestinations, removeAllNonDestinations, removeAllLinks, highlightHeaviestLinks, destinationsIntoNonDestinations, nonDestinationsIntoDestinations, reloadCachedTree};
-
-    	for(CustomButton b : allCustomButtons) {
-    		b.setPrefWidth(CustomButtonPrefWidth);
-    		b.setPrefHeight(CustomButtonPrefHeight);
-
-    		b.setMaxHeight(CustomButtonMaxHeight);
-    		b.setMaxWidth(CustomButtonMaxWidth);
-
-    		b.setMinWidth(CustomButtonMinWidth);
-    		b.setMinHeight(CustomButtonMinHeight);
-    	}
-    	
-    	VBox[] allVBoxes = {left, right};
-    	
-    	for(VBox v : allVBoxes) {
-    		v.setPrefWidth(2*CustomButtonPrefWidth + 2*p);
-    		v.setPrefHeight(4*CustomButtonPrefHeight + 5*p);
-
-    		v.setMaxWidth(2*CustomButtonMaxWidth + 2*p);
-    		v.setMaxHeight(4*CustomButtonMaxHeight + 5*p);
-    		
-    		v.setMinWidth(2*CustomButtonMinWidth + 2*p);
-    		v.setMinHeight(4*CustomButtonMinHeight + 5*p);
-    	}
-    	
-    	left.relocate(0, 0);
     	right.relocate(width/2, 0);
-
+    	right.setPrefHeight(height);
+    	right.setPrefWidth(width/2);
+    	left.resizeRelocate(0, 0, width/2, height);
+    	cellSize.setPrefHeight(height*0.05);
+    	cellSizeSlider.setPrefSize(width*0.4, height*0.03);
     }
     
     private void buttonClicked(Buttons type) {
-    	SMTEditor editor = (SMTEditor) getScene();
-    	editor.buttonClicked(type);
+    	getEditor().buttonClicked(type);
+    }
+    
+    private void radioButtonClicked(RadioButtons type) {
+    	getEditor().radioButtonClicked(type);
+    }
+    
+    private void checkBoxClicked(CheckBoxes type, boolean isSelected) {
+    		getEditor().checkBoxClicked(type, isSelected);
+    }
+    
+    private void toggleButtonClicked(ToggleButtons type, boolean isSelected) {
+    	if(type == ToggleButtons.DISCRETE_MODE) {
+    		discreteMode.setText((discreteMode.isSelected() ? "Exit Discrete Mode" : "Enter Discrete Mode"));
+    		getEditor().toggleButtonClicked(type, isSelected);
+    	}
+    	else {
+    		// do nothing
+    	}
     }
     
     public enum Buttons {
     	CLEAR,
+    	RELOAD_CACHED_TREE,
     	REMOVE_DESTINATIONS,
     	REMOVE_NONDESTINATIONS,
-    	REMOVE_LINKS,
-    	HIGHLIGHT_HEAVIEST_LINKS,
-    	DESTINATIONS_TO_NONDESTINATIONS,
-    	NONDESTINATIONS_TO_DESTINATIONS,
-    	RELOAD_CACHED_TREE;
+    	REMOVE_LINKS;
+    }
+    
+    public enum ToggleButtons {
+    	DISCRETE_MODE;
+    }
+    
+    public enum RadioButtons {
+		LINK_LENGTH, LINK_COST, NOTHING;
+    	
+    }
+    
+    public enum CheckBoxes {
+    	SHOW_NODE_ID;
+    }
+    
+    private class LinkOptionsView extends VBox {
+    	
+    	private Label showValueOf;
+    	private RadioButton linkCost, linkLength, nothing;
+    	private final ToggleGroup toggleGroup = new ToggleGroup();
+    	
+    	public LinkOptionsView() {
+    		showValueOf = new Label("Show value of:");
+    		    		
+    		linkCost = new RadioButton("link cost");
+    		linkLength = new RadioButton("link length");
+    		nothing = new RadioButton("nothing");
+
+    		
+    		linkCost.setToggleGroup(toggleGroup);    		
+    		linkLength.setToggleGroup(toggleGroup);
+    		nothing.setToggleGroup(toggleGroup);
+    		
+    		toggleGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+				@Override
+				public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
+					toggle(newValue);
+				}
+			});
+    		
+    		getChildren().addAll(showValueOf, linkCost, linkLength, nothing);
+    	}
+    	
+    	private void toggle(Toggle newValue) {
+			ControlsView.this.radioButtonClicked(getTypeForButton(newValue));;
+		}
+    	
+    	private RadioButtons getTypeForButton(Toggle t) {
+    		if(t == linkCost) 
+    			return RadioButtons.LINK_COST;
+    		else if(t == linkLength)
+    			return RadioButtons.LINK_LENGTH;
+    		else
+    			return RadioButtons.NOTHING;
+    	}
+
+		public void resizeRelocate(double x, double y, double width, double height) {
+    		super.resizeRelocate(x, y, width, height);
+    		layoutSubviews(width, height);
+    	}
+    	
+    	private void layoutSubviews(double width, double height) {    		
+    		this.setPrefHeight(height);
+    		this.setPrefWidth(width);
+    	}
+    	
     }
 }

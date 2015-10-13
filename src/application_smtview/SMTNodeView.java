@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -239,4 +240,14 @@ public abstract class SMTNodeView extends ImageView {
             return highestTwo;
         }
     }
+
+
+	public Point2D getLabelAnchor() {
+		Bounds bounds = this.getBoundsInParent();
+		
+		double x = bounds.getMinX() + bounds.getWidth();
+		double y = bounds.getMinY() + bounds.getHeight();
+		
+		return new Point2D(x,y);
+	}
 }

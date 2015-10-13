@@ -532,46 +532,6 @@ public class SharedMulticastTree {
 
 
 
-	public void nonDestinationsToDestinations() {
-		for(SMTNode n : this.getNodes()) {
-			if(n.isDestination)
-				continue;
-			SMTNode transform = SMTNodeFactory.transformNode(n);
-			nodes.replace(n.id, transform);
-		}
-	}
-
-
-
-	public void destinationsToNonDestinations() {
-		for(SMTNode n : this.getNodes()) {
-			if(!n.isDestination)
-				continue;
-			
-			SMTNode transform = SMTNodeFactory.transformNode(n);
-			nodes.replace(n.id, transform);
-		}	
-	}
-
-
-
-	public SMTLink getHeaviestLink() {
-		if(distinctLinks.isEmpty())
-			return null;
-		
-		double highest = 0;
-		SMTLink leader = null;
-		for(SMTLink l : this.distinctLinks.values()) {
-			double d = getDistanceBetween(l.id1, l.id2);
-			if(d > highest) {
-				highest = d;
-				leader = l;
-			}
-		}
-			
-		return leader;
-	}
-
 	public void removeLinks() {
 		for(SMTNode n : nodes.values())
 			n.removeAllNeighbors();
@@ -921,6 +881,18 @@ public class SharedMulticastTree {
 			this.kappa = value;
 		
 		recalculate();
+	}
+
+
+
+	public String getLinkLength(SMTLink l) {
+		return Double.toString(utils.Math.trim(this.getDistanceBetween(l.id1, l.id2)));
+	}
+
+
+
+	public String getLinkCost(SMTLink l) {
+		return Double.toString(utils.Math.trim(this.powerCost(l.id1, l.id2)));
 	}
 	
 }

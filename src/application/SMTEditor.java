@@ -5,6 +5,9 @@ import java.io.File;
 import application_componentview.SMTComponentView;
 import application_controlsview.ControlsView;
 import application_controlsview.ControlsView.Buttons;
+import application_controlsview.ControlsView.CheckBoxes;
+import application_controlsview.ControlsView.RadioButtons;
+import application_controlsview.ControlsView.ToggleButtons;
 import application_outputview.InputView.InputViewType;
 import application_outputview.TextOutputView;
 import application_outputview.TextOutputView.OutputFields;
@@ -281,6 +284,18 @@ public class SMTEditor extends Scene {
 			return this.kappa;
 		else 
 			return null;
+	}
+
+	public void toggleButtonClicked(ToggleButtons type, boolean isSelected) {
+		this.editor.toggleButtonClicked(type, isSelected);
+	}
+
+	public void checkBoxClicked(CheckBoxes type, boolean isSelected) {
+		this.editor.checkBoxClicked(type, isSelected);
+	}
+
+	public void radioButtonClicked(RadioButtons type) {
+		this.editor.radioButtonClicked(type);
 	}
 
 

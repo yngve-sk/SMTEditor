@@ -12,6 +12,9 @@ import java.io.File;
 
 import application_componentview.Components;
 import application_controlsview.ControlsView.Buttons;
+import application_controlsview.ControlsView.CheckBoxes;
+import application_controlsview.ControlsView.RadioButtons;
+import application_controlsview.ControlsView.ToggleButtons;
 import application_outputview.InputView.InputViewType;
 
 /**
@@ -210,4 +213,15 @@ public class SMTView extends ScrollPane {
 		this.content.inputDidChange(value, type);
 	}
 
+	public void toggleButtonClicked(ToggleButtons type, boolean isSelected) {
+		this.content.toggleButtonClicked(type, isSelected);
+	}
+
+	public void checkBoxClicked(CheckBoxes type, boolean isSelected) {
+		this.content.checkBoxClicked(type, isSelected);
+	}
+
+	public void radioButtonClicked(RadioButtons type) {
+		this.content.radioButtonClicked(type);
+	}
 }

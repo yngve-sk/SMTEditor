@@ -1,5 +1,7 @@
 package application_smtview;
 
+import application_controlsview.ControlsView.RadioButtons;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -28,7 +30,7 @@ public class SMTLinkView extends Line {
         this.setOnMouseEntered(event -> mouseEntered());
         this.setOnMouseExited(event -> mouseExited());
         this.setOnMouseClicked(event -> mouseClicked());
-
+        
         this.startId = startId;
         this.endId = endId;
         link = new SMTLink(startId, endId);
@@ -135,4 +137,14 @@ public class SMTLinkView extends Line {
     public String toString() {
     	return "Link from " + startId + " to " + endId + " with graphical length " + getLength();
     }
+    
+    public Point2D getCenter() {
+    	Bounds bounds = this.getBoundsInParent();
+    	
+    	double x = bounds.getMinX() + bounds.getWidth()/2;
+    	double y = bounds.getMinY() + bounds.getHeight()/2;
+    	
+    	return new Point2D(x, y);
+    }
+    
 }

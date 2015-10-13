@@ -8,12 +8,18 @@ import java.util.List;
 
 import application.SMTEditor;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Color;
 import model.IdTracker;
 import model.SMTFactory;
 import model.SMTLink;
@@ -23,6 +29,9 @@ import model.SharedMulticastTree;
 import utils.Dictionary;
 import application_componentview.Components;
 import application_controlsview.ControlsView.Buttons;
+import application_controlsview.ControlsView.CheckBoxes;
+import application_controlsview.ControlsView.RadioButtons;
+import application_controlsview.ControlsView.ToggleButtons;
 import application_outputview.InputView.InputViewType;
 
 
@@ -64,6 +73,8 @@ public class SMTContentView extends Group {
 
     private Dictionary<SMTLink, SMTLinkView> linkDictionary;
     private HashMap<Integer, SMTNodeView> nodeDictionary;
+    private ArrayList<Label> nodeLabels;
+    private ArrayList<Label> linkLabels;
 
     private boolean isUpdating; // this should be set to true whenever mouse actions should be blocked
     
@@ -92,7 +103,9 @@ public class SMTContentView extends Group {
         phantom.setFitHeight(getCurrentNodeDimension());
 
         linkDictionary = new Dictionary<SMTLink, SMTLinkView>();
-
+        nodeLabels = new ArrayList<Label>();
+        linkLabels = new ArrayList<Label>();
+        
         nodeDictionary = new HashMap<Integer, SMTNodeView>();
         componentType = Components.CURSOR;
 
@@ -104,13 +117,17 @@ public class SMTContentView extends Group {
     public void draw() {
     	if(tree == null)
     		return;
+    	
     	isUpdating = true; // block mouse actions
         getChildren().retainAll(background, statsPopup, phantom);
         ObservableList<Node> children = getChildren();
-//        children.add(background);
 
         linkDictionary.clear();
         nodeDictionary.clear();
+        
+        // if discrete mode is on, draw the grid
+        if(isInDiscreteMode)
+        	drawGrid();
 
         Collection<SMTNode> nodes = tree.getNodes();
 
@@ -148,10 +165,55 @@ public class SMTContentView extends Group {
         children.addAll(linkDictionary.values());
         children.addAll(nodeDictionary.values());
 
+        if(this.nodeLabels.size() < tree.getNodes().size()) {
+        	while(this.nodeLabels.size() < tree.getNodes().size()) {
+        		this.nodeLabels.add(newLabel());	
+        	}
+        }
+        
+        if(this.linkLabels.size() < tree.getAllDistinctLinks().size()) {
+        	while(this.linkLabels.size() < tree.getAllDistinctLinks().size()) {
+        		this.linkLabels.add(newLabel());	
+        	}
+        }
+        
+        children.addAll(nodeLabels);
+        children.addAll(linkLabels);
+        
+        updateLabels();
         // Add stats popup
 //      children.add(statsPopup);
         // Refresh output view
     	isUpdating = false;
+    }
+
+    private void updateLabels() {
+    	radioButtonClicked(selectedRadioButton);
+    	showNodeIds(isShowingNodeIds);
+	}
+
+
+
+	/**
+     * Draws a grid with dimension same as node dimension, scaled to current zoom
+     */
+    private void drawGrid() {
+		
+	}
+
+
+
+	/**
+     *  Config label style options in this method
+     * @return
+     *  	a new label with set style options
+     */
+    private Label newLabel() {
+		Label l = new Label();
+		l.setBackground(new Background(new BackgroundFill(Color.BLACK, new CornerRadii(3), new Insets(-3,-5,-3,-5))));
+		l.setOpacity(0.8);
+		l.setTextFill(Color.WHITE);
+		return l;
     }
     
     private void updateOutput() {
@@ -420,8 +482,10 @@ public class SMTContentView extends Group {
         tree.addNode(modelX, modelY, componentType == Components.DESTINATION,
                 IdTracker.getNextNodeId(), null); // order of these two calls is important
 
-        getChildren().add(view);
+//        getChildren().add(view);
         updateOutput();
+        draw();
+        showNodeIds(isShowingNodeIds);
 	}
 
 
@@ -463,6 +527,7 @@ public class SMTContentView extends Group {
         
         // Redraw now that tree is updated
         draw(); // will set isUpdating to false
+        radioButtonClicked(selectedRadioButton);
     }
 
     /**
@@ -545,6 +610,8 @@ public class SMTContentView extends Group {
         node.relocate(visualX, visualY);
         relocateLinksConnectedToNode(node, x, y);
         updateOutput();
+        radioButtonClicked(selectedRadioButton); // relocate  labels too 
+        showNodeIds(isShowingNodeIds);
     }
 
 
@@ -571,6 +638,7 @@ public class SMTContentView extends Group {
                 view.setEndY(y);
             }
         }
+        
     }
 
 
@@ -644,12 +712,6 @@ public class SMTContentView extends Group {
     	break;
     	case REMOVE_LINKS : removeLinks(); 
     	break;
-    	case HIGHLIGHT_HEAVIEST_LINKS : highlightHeaviestLinks(); 
-    	break;
-    	case DESTINATIONS_TO_NONDESTINATIONS : destinationsToNonDestinations(); 
-    	break;
-    	case NONDESTINATIONS_TO_DESTINATIONS : nonDestinationsToDestinations(); 
-    	break;
     	case RELOAD_CACHED_TREE : reloadCachedTree(); 
     	break;
     	default: ;
@@ -679,25 +741,6 @@ public class SMTContentView extends Group {
 		tree.removeLinks();
 		draw();
 	}
-
-
-	private void highlightHeaviestLinks() {
-		SMTLink heaviestLink = tree.getHeaviestLink();
-		linkDictionary.get(heaviestLink).highlightAsPowerLevelOne();
-	}
-
-
-	private void destinationsToNonDestinations() {
-		tree.destinationsToNonDestinations();
-		draw();
-	}
-
-
-	private void nonDestinationsToDestinations() {
-		tree.nonDestinationsToDestinations();
-		draw();
-	}
-
 
 	private void reloadCachedTree() {
 		tree = SMTParser.getCachedTree();
@@ -729,6 +772,112 @@ public class SMTContentView extends Group {
 		updateOutput();
 	}
 
+	public void toggleButtonClicked(ToggleButtons type, boolean isSelected) {
+		// right now there is only discrete mode but use type if more is added
+		setDiscreteMode(isSelected);
+	}
+
+	private boolean isInDiscreteMode = false;
+	private void setDiscreteMode(boolean isSelected) {
+		isInDiscreteMode = isSelected;
+		draw();
+	}
+
+
+
+	public void checkBoxClicked(CheckBoxes type, boolean isSelected) {
+		// only "show node id" type implemented at the moment
+		showNodeIds(isSelected);
+	}
+	
+	
+	private boolean isShowingNodeIds = false;
+	
+	private void showNodeIds(boolean isSelected) {
+		isShowingNodeIds = isSelected;
+		int index = 0;
+		for(SMTNodeView view : this.nodeDictionary.values()) {
+			Label l = nodeLabels.get(index++);
+			l.setVisible(isSelected);
+			if(isSelected) {
+				l.setText(Integer.toString(view.getNodeId()));
+				Point2D center = view.getLabelAnchor();
+				l.relocate(center.getX(), center.getY());
+			}
+		}
+		
+		while(index < nodeLabels.size())
+			nodeLabels.get(index++).setVisible(false);
+	}
+
+
+	private RadioButtons selectedRadioButton;
+
+	public void radioButtonClicked(RadioButtons type) {
+		selectedRadioButton = type;
+				
+		if(type == RadioButtons.NOTHING) {
+			hideALlLabels();
+		}
+		else if(type == RadioButtons.LINK_COST) {
+			showLinkCosts();
+		}
+		else if(type == RadioButtons.LINK_LENGTH) {
+			showLinkLengths();
+		}
+		else {
+			// should never happen
+		}
+	}
+
+
+
+	private void hideALlLabels() {
+		if(this.linkLabels.isEmpty())
+			return;
+		
+		for(Label l : this.linkLabels) {
+			l.setVisible(false);
+		}
+	}
+
+	private void showLinkCosts() {
+		if(this.linkLabels.isEmpty())
+			return;
+		
+		int index = 0;
+		for(SMTLink l : tree.getAllDistinctLinks()) {
+			Point2D linkCenter = this.linkDictionary.get(l).getCenter();
+			Label label = linkLabels.get(index++);
+			label.setText(tree.getLinkCost(l));
+			label.setVisible(true);
+			label.relocate(linkCenter.getX(), linkCenter.getY());
+		}
+		
+		// hide the rest of the labels
+		while(index < linkLabels.size())
+			linkLabels.get(index++).setVisible(false);
+	}
+
+
+
+	private void showLinkLengths() {
+		if(this.linkLabels.isEmpty())
+			return;
+		
+		int index = 0;
+		for(SMTLink l : tree.getAllDistinctLinks()) {
+			Point2D linkCenter = this.linkDictionary.get(l).getCenter();
+			Label label = linkLabels.get(index++);
+			label.setVisible(true);
+			label.setText(tree.getLinkLength(l));
+			label.relocate(linkCenter.getX(), linkCenter.getY());
+		}
+		
+		// hide the rest of the labels
+		while(index < linkLabels.size())
+			linkLabels.get(index++).setVisible(false);
+	}
 
 
 
