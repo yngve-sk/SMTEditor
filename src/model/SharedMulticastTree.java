@@ -903,7 +903,11 @@ public class SharedMulticastTree {
 	public void setDiscreteMode(boolean isInDiscreteMode, int discreteCellSize) {
 		if(discreteCellSize != Mode.getDiscreteCellSize()) {
 			System.out.println("new cell size: " + discreteCellSize);
-			adjustNodePositions(Mode.getDiscreteCellSize(), discreteCellSize);
+			
+			// only adjust when it already is in discrete mode and only the cell size is being changed
+			if(Mode.isInDiscreteMode() && isInDiscreteMode) 
+				adjustNodePositions(Mode.getDiscreteCellSize(), discreteCellSize);
+			
 			recalculate();
 		}
 		Mode.setDiscreteMode(isInDiscreteMode, discreteCellSize);
