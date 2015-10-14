@@ -298,6 +298,10 @@ public class SMTEditor extends Scene {
 		this.editor.radioButtonClicked(type);
 	}
 
+	public void cellSizeDidChange(int intValue) {
+		this.editor.cellSizeDidChange(intValue);
+	}
+
 
 
 }

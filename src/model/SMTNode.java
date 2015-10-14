@@ -93,6 +93,44 @@ public abstract class SMTNode {
 
 
 
+	private int roundModelForDiscreteCellSize(double coord) {
+		int cellSize = Mode.getDiscreteCellSize();
+		
+		int intCoord = (int) coord;
+		
+		if(intCoord%cellSize < cellSize/2 || (intCoord >= Mode.defaultDimension - cellSize/2)) { // round down
+			return intCoord - (intCoord%cellSize);
+		}
+		else if(intCoord < cellSize) { // Round up so it's "in" in the grid
+			return cellSize; 
+		}
+		else { // round up if it's "past" the mid point
+			return intCoord - (intCoord%cellSize) + cellSize;
+		}
+	}
+
+	private double roundVisualForDiscreteCellSize(double coord) {
+		int cellSize = Mode.getDiscreteCellSize();
+		
+		System.out.println("actual coord : " + coord + ", round visual, cellSize = " + cellSize);
+		
+		double lowerOption = coord - (coord % cellSize);
+		double higherOption = lowerOption + cellSize;
+		double d = cellSize*0.5;
+		
+		System.out.println("lower : " + lowerOption + ", higher : " + higherOption);
+		
+		if(coord%cellSize == 0)
+			return coord + d;
+		else if(coord - lowerOption < higherOption - coord) {
+			System.out.println("returning lowerOption + d = " + (lowerOption + d));
+			return lowerOption + d;
+		} 
+		else {
+			System.out.println("returning higherOption + d = " + (higherOption + d));
+			return higherOption + d;
+		}
+	}
 
 	/**
 	 *
@@ -100,7 +138,8 @@ public abstract class SMTNode {
 	 *     a string representation of the nodes position in form (x,y)
 	 */
 	public String getPosition() {
-	    return "(" + utils.Math.trim(x) + ", " + utils.Math.trim(y) + ")";
+	    return Mode.isInDiscreteMode() ? "(" + roundModelForDiscreteCellSize(x) + ", " + roundModelForDiscreteCellSize(y) + ")" : 
+	    	"(" + utils.Math.trim(x) + ", " + utils.Math.trim(y) + ")";
 	}
 
 
@@ -150,17 +189,43 @@ public abstract class SMTNode {
 	public double getNodeCost() {
 	    return this.nodeCost;
 	}
+	
+	/**
+	 * Gets the visual X, to display correctly in grid under discrete mode it must have
+	 * double coordinates, yet "pretend" to have integer coordinates model-wise
+	 * @return
+	 */
+	public double getVisualX() {
+        return Mode.isInDiscreteMode() ? roundVisualForDiscreteCellSize(x) : x;
+	}
+	
+	/**
+	 * Gets the visual Y, to display correctly in grid under discrete mode it must have
+	 * double coordinates, yet "pretend" to have integer coordinates model-wise
+	 * @return
+	 */
+	public double getVisualY() {
+        return Mode.isInDiscreteMode() ? roundVisualForDiscreteCellSize(y) : y;
+	}
 
+	/**
+	 * Gets x used in MODEL operations, for graphical display getVisualX() must be called
+	 * @return
+	 */
     public double getX() {
-        return x;
+        return Mode.isInDiscreteMode() ? roundModelForDiscreteCellSize(x) : x;
     }
 
     public void setX(double x) {
         this.x = x;
     }
 
+	/**
+	 * Gets y used in MODEL operations, for graphical display getVisualY() must be called
+	 * @return
+	 */
     public double getY() {
-        return y;
+        return Mode.isInDiscreteMode() ? roundModelForDiscreteCellSize(y) : y;
     }
 
     public void setY(double y) {

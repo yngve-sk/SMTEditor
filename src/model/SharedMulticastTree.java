@@ -330,7 +330,7 @@ public class SharedMulticastTree {
 	private double powerCost(int n1, int n2) {
 	    SMTNode node1 = nodes.get(n1);
 	    SMTNode node2 = nodes.get(n2);
-
+	    
 	    double lx = node2.getX() - node1.getX();
 	    double ly = node2.getY() - node1.getY();
 
@@ -349,7 +349,7 @@ public class SharedMulticastTree {
 	private int[] twoMostDistant(int id) {
 		List<Integer> withinRange = nodes.get(id).getNeighboursWithinRange();
 		int size = withinRange.size();
-
+		
 		int[] mostDistant = {-1, -1};
 
 		if(size == 1) {
@@ -358,12 +358,17 @@ public class SharedMulticastTree {
 
 
 		if(size > 1) {
+			System.out.println("size = " + size);
 		    NodeNeighborDistanceFilter filter = new NodeNeighborDistanceFilter(nodes.get(id));
 		    for(Integer neighborId : withinRange)
 		        filter.runThroughFilter(nodes.get(neighborId));
+		    
 
-		    mostDistant[0] = filter.getTwoMostDistantNodes()[0].id;
-		    mostDistant[1] = filter.getTwoMostDistantNodes()[1].id;
+		    SMTNode[] nodes = filter.getTwoMostDistantNodes();
+		    System.out.println(nodes[0] + ",   " + nodes[1]);
+		    
+		    mostDistant[0] = nodes[0].id;
+		    mostDistant[1] = nodes[1].id;
 		}
 
 		return mostDistant;
@@ -591,10 +596,10 @@ public class SharedMulticastTree {
 	    private SMTNode origin;
 
 	    private SMTNode furthest;
-	    private double furthestDistance = 0;
+	    private double furthestDistance = -1;
 
 	    private SMTNode nextFurthest;
-	    private double nextFurthestDistance = 0;
+	    private double nextFurthestDistance = -1;
 
 	    /**
 	     * Initializes a new filter, taking in origin node
@@ -620,7 +625,7 @@ public class SharedMulticastTree {
 	     *     the node
 	     */
 	    public void runThroughFilter(SMTNode node) {
-
+	    	System.out.println("running " + node + " through filter...");
 	        double dist = distanceTo(node);
 	        
 	        if(dist > furthestDistance) {
@@ -630,7 +635,7 @@ public class SharedMulticastTree {
 	        	furthest = node;
 	            furthestDistance = dist;
 	        }
-	        else if(dist > nextFurthestDistance && dist < furthestDistance) {
+	        else if((dist > nextFurthestDistance && dist < furthestDistance) || (dist == furthestDistance && nextFurthest == null)) {
 	            nextFurthest = node;
 	            nextFurthestDistance = dist;
 	        }
@@ -893,6 +898,25 @@ public class SharedMulticastTree {
 
 	public String getLinkCost(SMTLink l) {
 		return Double.toString(utils.Math.trim(this.powerCost(l.id1, l.id2)));
+	}
+
+	public void setDiscreteMode(boolean isInDiscreteMode, int discreteCellSize) {
+		if(discreteCellSize != Mode.getDiscreteCellSize()) {
+			System.out.println("new cell size: " + discreteCellSize);
+			adjustNodePositions(Mode.getDiscreteCellSize(), discreteCellSize);
+			recalculate();
+		}
+		Mode.setDiscreteMode(isInDiscreteMode, discreteCellSize);
+	}
+
+
+
+	private void adjustNodePositions(int oldCellSize, int newCellSize) {
+		double ratio = (1.0*newCellSize)/(1.0*oldCellSize);
+		for(SMTNode n : this.nodes.values()) {
+			n.setX(n.getX()*ratio);
+			n.setY(n.getY()*ratio);
+		}
 	}
 	
 }

@@ -55,10 +55,10 @@ public class ControlsView extends Group{
     	cellSizeSlider.valueProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-				int intValue = newValue.intValue(); // ugly double "?" but it just makes sure the size remains the same
-				String newText = "Discrete mode cell size : " + intValue;
-				cellSizeLabel.setText(newText);
-			}});
+				ControlsView.this.cellSizeDidChange(newValue.intValue());
+			}
+
+			});
     	
     	cellSize.getChildren().addAll(cellSizeLabel, cellSizeSlider);
     	
@@ -92,7 +92,15 @@ public class ControlsView extends Group{
     
 
 
-    private SMTEditor getEditor() {
+    protected void cellSizeDidChange(int intValue) {
+		String newText = "Discrete mode cell size : " + intValue;
+		cellSizeLabel.setText(newText);	
+		getEditor().cellSizeDidChange(intValue);
+    }
+
+
+
+	private SMTEditor getEditor() {
     	SMTEditor editor = (SMTEditor) getScene();
     	return editor;
     }

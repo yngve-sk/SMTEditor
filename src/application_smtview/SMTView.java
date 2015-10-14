@@ -224,4 +224,8 @@ public class SMTView extends ScrollPane {
 	public void radioButtonClicked(RadioButtons type) {
 		this.content.radioButtonClicked(type);
 	}
+
+	public void cellSizeDidChange(int intValue) {
+		this.content.cellSizeDidChange(intValue);
+	}
 }
