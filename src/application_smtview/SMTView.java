@@ -39,7 +39,7 @@ public class SMTView extends ScrollPane {
      */
     public SMTView() {
         content = new SMTContentView(this);
-        this.setContent(content);
+        setContent(content);
 
         cursor = Components.CURSOR;
         updateCursorForComponentType();
@@ -57,17 +57,17 @@ public class SMTView extends ScrollPane {
         nonDestinationCursor = ImageCursor.chooseBestCursor(nonDest, hotspotX, hotspotY);
 
 
-        this.setOnMouseEntered(event -> mouseEntered());
-        this.setOnMouseExited(event -> mouseExited());
-        this.setOnMouseClicked(event -> mouseClicked(event));
-        this.setOnMouseMoved(event -> mouseOver(event));
+        setOnMouseEntered(event -> mouseEntered());
+        setOnMouseExited(event -> mouseExited());
+        setOnMouseClicked(event -> mouseClicked(event));
+        setOnMouseMoved(event -> mouseOver(event));
 
-        this.getChildren().add(content);
+        getChildren().add(content);
  }
 
     private void mouseClicked(MouseEvent e) {
 //        System.out.println("CLICKED");
-        content.mouseClicked();
+        content.mouseClicked(e);
 
 //        System.out.println("e coords : " + e.getX() + ", " + e.getY());
 //        System.out.println("content.parentToLocal : " + content.parentToLocal(parentX, parentY));
@@ -78,13 +78,13 @@ public class SMTView extends ScrollPane {
 //        System.out.println("content.sceneToLocal : " + content.sceneToLocal(parentX, parentY));
 //        System.out.println("content.screenToLocal : " + content.screenToLocal(parentX, parentY));
 //
-//        System.out.println("this.parentToLocal : " + this.parentToLocal(parentX, parentY));
-//        System.out.println("this.screenToLocal : " + this.screenToLocal(parentX, parentY));
-//        System.out.println("this.localToParent : " + this.localToParent(parentX, parentY));
-//        System.out.println("this.localToScreen : " + this.localToScreen(parentX, parentY));
-//        System.out.println("this.localToScene : " + this.localToScene(parentX, parentY));
-//        System.out.println("this.sceneToLocal : " + this.sceneToLocal(parentX, parentY));
-//        System.out.println("this.screenToLocal : " + this.screenToLocal(parentX, parentY));
+//        System.out.println("parentToLocal : " + parentToLocal(parentX, parentY));
+//        System.out.println("screenToLocal : " + screenToLocal(parentX, parentY));
+//        System.out.println("localToParent : " + localToParent(parentX, parentY));
+//        System.out.println("localToScreen : " + localToScreen(parentX, parentY));
+//        System.out.println("localToScene : " + localToScene(parentX, parentY));
+//        System.out.println("sceneToLocal : " + sceneToLocal(parentX, parentY));
+//        System.out.println("screenToLocal : " + screenToLocal(parentX, parentY));
     }
 
     /**
@@ -95,14 +95,14 @@ public class SMTView extends ScrollPane {
      * @return
      */
     private Point2D scrollPaneToContent(double x, double y) {
-        double viewPortHeight = this.getViewportBounds().getHeight();
-        double viewPortWidth = this.getViewportBounds().getWidth();
+        double viewPortHeight = getViewportBounds().getHeight();
+        double viewPortWidth = getViewportBounds().getWidth();
 
         double contentHeight = content.getBoundsInLocal().getHeight();
         double contentWidth = content.getBoundsInLocal().getWidth();
 
-        double vScroll = this.getVvalue();
-        double hScroll = this.getHvalue();
+        double vScroll = getVvalue();
+        double hScroll = getHvalue();
 
         double hScrollRange = contentWidth - viewPortWidth;
         double vScrollRange = contentHeight - viewPortHeight;
@@ -138,13 +138,13 @@ public class SMTView extends ScrollPane {
      */
     public SMTView(double x, double y, double width, double height) {
         this();
-        this.resizeRelocate(x, y, width, height);
+        resizeRelocate(x, y, width, height);
     }
 
     @Override
     public void resizeRelocate(double x, double y, double width, double height) {
         super.resizeRelocate(x, y, width, height);
-        this.setPrefSize(width, height);
+        setPrefSize(width, height);
     }
 
     /**
@@ -157,19 +157,19 @@ public class SMTView extends ScrollPane {
 
     private void updateCursorForComponentType() {
         if(cursor == Components.CURSOR) {
-            this.setCursor(defaultCursor);
+            setCursor(defaultCursor);
         }
         else if(cursor == Components.DESTINATION) {
-            this.setCursor(destinationCursor);
+            setCursor(destinationCursor);
         }
         else if(cursor == Components.NONDESTINATION) {
-            this.setCursor(nonDestinationCursor);
+            setCursor(nonDestinationCursor);
         }
         else if(cursor == Components.LINK) {
-            this.setCursor(linkCursor);
+            setCursor(linkCursor);
         }
         else {
-            this.setCursor(defaultCursor);
+            setCursor(defaultCursor);
         }
     }
 
@@ -188,44 +188,62 @@ public class SMTView extends ScrollPane {
     private double vScrollCache = 0;
 
     public void cacheScroll() {
-        hScrollCache = this.getHvalue();
-        vScrollCache = this.getVvalue();
+        hScrollCache = getHvalue();
+        vScrollCache = getVvalue();
     }
 
     public void restoreScrollFromCache() {
         setHvalue(hScrollCache);
         setVvalue(vScrollCache);
     }
-
-	public void buttonClicked(Buttons type) {
-		content.buttonClicked(type);
-	}
-
-	public void fileWasDropped(File file) {
-		content.fileWasDropped(file);
-	}
-
-	public void saveButtonClicked() {
-		content.saveButtonClicked();
-	}
-
-	public void inputDidChange(double value, InputViewType type) {
-		this.content.inputDidChange(value, type);
-	}
-
-	public void toggleButtonClicked(ToggleButtons type, boolean isSelected) {
-		this.content.toggleButtonClicked(type, isSelected);
-	}
-
-	public void checkBoxClicked(CheckBoxes type, boolean isSelected) {
-		this.content.checkBoxClicked(type, isSelected);
-	}
-
-	public void radioButtonClicked(RadioButtons type) {
-		this.content.radioButtonClicked(type);
-	}
-
-	public void cellSizeDidChange(int intValue) {
-		this.content.cellSizeDidChange(intValue);
-	}
+    
+    public SMTContentView getContentView() {
+    	return this.content;
+    }
+//
+//    // 
+//    // 			Methods below this point are routed to content
+//    //
+//	public void buttonClicked(Buttons type) {
+//		content.buttonClicked(type);
+//	}
+//
+//	public void fileWasDropped(File file) {
+//		content.fileWasDropped(file);
+//	}
+//
+//	public void saveButtonClicked() {
+//		content.saveButtonClicked();
+//	}
+//
+//	public void inputDidChange(double value, InputViewType type) {
+//		content.inputDidChange(value, type);
+//	}
+//
+//	public void toggleButtonClicked(ToggleButtons type, boolean isSelected) {
+//		content.toggleButtonClicked(type, isSelected);
+//	}
+//
+//	public void checkBoxClicked(CheckBoxes type, boolean isSelected) {
+//		content.checkBoxClicked(type, isSelected);
+//	}
+//
+//	public void radioButtonClicked(RadioButtons type) {
+//		content.radioButtonClicked(type);
+//	}
+//
+//	public void cellSizeDidChange(int intValue) {
+//		content.cellSizeDidChange(intValue);
+//	}
+//
+//	public void graphicalDimensionDidChange(int newGraphicalDimension) {
+////		this.setVmax(newGraphicalDimension); // also update scroll bar
+////		this.setHmax(newGraphicalDimension);
+//		content.graphicalDimensionDidChange(newGraphicalDimension);
+//		this.autosize();
+//	}
+//
+//	public void referenceDimensionDidChange(int newReferenceDimension) {
+//		content.referenceDimensionDidChange(newReferenceDimension);
+//	}
 }

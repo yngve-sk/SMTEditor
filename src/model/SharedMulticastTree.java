@@ -51,7 +51,7 @@ public class SharedMulticastTree {
 	    
 		this.nodes = new HashMap<Integer, SMTNode>();
 		this.numberOfDestinations = numberOfDestinations;
-		
+
 		int i = 0;
 		for(Point2D p : nodes) { // Convert the coordinates into nodes
 		    SMTNode newNode = SMTNodeFactory.newNode(p.getX(), p.getY(), i++ < numberOfDestinations);
@@ -66,7 +66,7 @@ public class SharedMulticastTree {
 		distinctLinks = new Dictionary<SMTLinkKey, SMTLink>();
 
 		recalculate();
-	}
+}
 
 
 
@@ -240,11 +240,13 @@ public class SharedMulticastTree {
     public void recalculate() {
         for(SMTNode n : nodes.values())
             n.recalculateData();
-        
-        updateLinks();
+
+        updateLinks();        
         updatePowerLevelsAndMostDistantLinks();
+        System.out.println("durr");
         
         validate();
+        
         if(!isValid()) {
         	System.out.println("Not valid tree");
         	this.cost = -1;
@@ -358,14 +360,14 @@ public class SharedMulticastTree {
 
 
 		if(size > 1) {
-			System.out.println("size = " + size);
+//			System.out.println("size = " + size);
 		    NodeNeighborDistanceFilter filter = new NodeNeighborDistanceFilter(nodes.get(id));
 		    for(Integer neighborId : withinRange)
 		        filter.runThroughFilter(nodes.get(neighborId));
 		    
 
 		    SMTNode[] nodes = filter.getTwoMostDistantNodes();
-		    System.out.println(nodes[0] + ",   " + nodes[1]);
+//		    System.out.println(nodes[0] + ",   " + nodes[1]);
 		    
 		    mostDistant[0] = nodes[0].id;
 		    mostDistant[1] = nodes[1].id;
@@ -625,7 +627,7 @@ public class SharedMulticastTree {
 	     *     the node
 	     */
 	    public void runThroughFilter(SMTNode node) {
-	    	System.out.println("running " + node + " through filter...");
+//	    	System.out.println("running " + node + " through filter...");
 	        double dist = distanceTo(node);
 	        
 	        if(dist > furthestDistance) {
@@ -696,7 +698,9 @@ public class SharedMulticastTree {
 				SMTLinkKey linkKey = new SMTLinkKey(n.id, n.getMostDistant());
 				if(!( !n.isDestination && n.isLeaf() )) { // if n isn't a non-destination leaf
 					double nCost = n.getCost(nod, distinctLinks.get(linkKey));  // pass link with subtree info to node
+					System.out.println("myCost = " + myCost + "\nAdding cost of node " + n.toString());
 					myCost += nCost;
+					System.out.println("myCost after add = " + myCost);
 				}
 			}
 		
@@ -782,7 +786,7 @@ public class SharedMulticastTree {
 		int numLinks = this.distinctLinks.values().size();
 		int numLeafs = 0;
 		int singletons = 0;
-		
+
 		if(numNodes <= numLinks) { // Cycle detected
 			isValidSMT = false;
 			return;

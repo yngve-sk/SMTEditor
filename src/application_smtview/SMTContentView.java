@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
+import application.DefaultValues;
 import application.SMTEditor;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -18,6 +20,7 @@ import javafx.scene.control.Label;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -25,6 +28,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
 import model.IdTracker;
+import model.Mode;
 import model.SMTFactory;
 import model.SMTLink;
 import model.SMTNode;
@@ -52,11 +56,11 @@ public class SMTContentView extends Group {
     private Components componentType;
 
     // the visual dimension, size of the entire plane embedded within the scrollpane
-    private final double visualPlaneDimension = 2000;
+    private double visualPlaneDimension = DefaultValues.DEFAULT_GRAPHICAL_DIMENSION;
 
     // the "actual" dimension, i.e if this is 100 then the max x and y-coordinate is 100
-    private final double referenceDimension = 500; 
-    private final double referenceNodeDimension = 10; // relative size between nodes and the plane as a whole
+    private double referenceDimension = DefaultValues.DEFAULT_REFERENCE_DIMENSION; 
+    private double referenceNodeDimension = DefaultValues.DEFAULT_REFERENCE_NODE_DIMENSION; // relative size between nodes and the plane as a whole
     // i.e if referenceDimension is 10 and referenceNodeDimension is 1, a node will occupy a square with side lengths
     // the same as 10% of the visual plane dimension
     
@@ -83,14 +87,14 @@ public class SMTContentView extends Group {
     private HashMap<Integer, SMTNodeView> nodeDictionary;
     private ArrayList<Label> nodeLabels;
     private ArrayList<Label> linkLabels;
-
+    private Label coordinateLabel;
+    
     private boolean isUpdating; // this should be set to true whenever mouse actions should be blocked
     
     public SMTContentView(SMTView parent) {
         this.parent = parent;
 //        currentDimension = 1000;
-        currentNodeDimension = visualPlaneDimension*referenceNodeDimension/referenceDimension;
-
+        
         tree = SMTFactory.emptyTree();
         
         System.out.println("current node dimension = " + currentNodeDimension);
@@ -100,6 +104,7 @@ public class SMTContentView extends Group {
 
         this.resize(visualPlaneDimension, visualPlaneDimension);
         this.setBlendMode(BlendMode.DARKEN);
+        
         background = new ImageView(new Image("images/background.jpg"));
         background.autosize();
         background.setFitWidth(visualPlaneDimension);
@@ -109,6 +114,8 @@ public class SMTContentView extends Group {
         destination = new Image(Components.DESTINATION.getImagePath());
         nonDestination = new Image(Components.NONDESTINATION.getImagePath());
 
+    	recalculateCurrentNodeDimension();
+        
         phantom = new ImageView();
         phantom.setOpacity(0.5);
         phantom.setVisible(false);
@@ -123,21 +130,45 @@ public class SMTContentView extends Group {
         linkDictionary = new Dictionary<SMTLink, SMTLinkView>();
         nodeLabels = new ArrayList<Label>();
         linkLabels = new ArrayList<Label>();
+        coordinateLabel = newLabel();
         
         nodeDictionary = new HashMap<Integer, SMTNodeView>();
         componentType = Components.CURSOR;
 
-        getChildren().addAll(background, phantom, statsPopup, grid);
+        getChildren().addAll(background, phantom, statsPopup, grid, coordinateLabel);
     }
 
+    /**
+     * Updates the visual node dimension
+     * This should be called after any change in reference node dimension.
+     */
+    private void referenceNodeDimensionDidChange() {
+    	recalculateCurrentNodeDimension();
+    	draw();
+    }
+    
+    private void recalculateCurrentNodeDimension() {
+    	System.out.println("recalculating current node dimension: refNode/ref = " + (referenceNodeDimension/referenceDimension));
+    	double ratio = referenceNodeDimension/referenceDimension;
+    	currentNodeDimension = visualPlaneDimension*ratio;
+    }
+    
+	
+    private void resizeBackgroundAndGrid() {
+		this.background.setFitWidth(visualPlaneDimension);
+		this.background.setFitHeight(visualPlaneDimension);
+		this.grid.resize(visualPlaneDimension, visualPlaneDimension);
+		this.resize(visualPlaneDimension, visualPlaneDimension);
+		this.autosize();
+	}
 
 
-    public void draw() {
+	public void draw() {
     	if(tree == null)
     		return;
     	
     	isUpdating = true; // block mouse actions
-        getChildren().retainAll(background, statsPopup, phantom, grid);
+        getChildren().retainAll(background, statsPopup, phantom, grid, coordinateLabel);
         ObservableList<Node> children = getChildren();
 
         linkDictionary.clear();
@@ -148,14 +179,26 @@ public class SMTContentView extends Group {
         	drawGrid();
 
         Collection<SMTNode> nodes = tree.getNodes();
+        Stack<Integer> toBeRemoved = new Stack<Integer>(); 
 
         // Generate all node views
         for(SMTNode n : nodes) {
         	double x = transformCoordinateValueFromModelToVisual(n.getX());
         	double y = transformCoordinateValueFromModelToVisual(n.getY());
-        	SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, x, y, getCurrentNodeDimension(),n.isDestination);
-        	nodeDictionary.put(n.id, view);
+        	
+        	if(isOutOfBounds(x) || isOutOfBounds(y)) {
+        		toBeRemoved.push(n.id);// avoiding ConcurrentModificationException
+        	}
+        	else {
+        		SMTNodeView view = SMTNodeViewFactory.newNodeView(n.id, x, y, getCurrentNodeDimension(),n.isDestination);
+        		nodeDictionary.put(n.id, view);
+        	}
         }
+        
+        for(Integer i : toBeRemoved) 
+        	tree.removeNode(i);
+        
+        updateOutput();
         
         List<SMTLink> allLinks = tree.getAllDistinctLinks();
         
@@ -201,13 +244,18 @@ public class SMTContentView extends Group {
         updateLabels();
         this.grid.toBack();
         this.background.toBack();
-        // Add stats popup
-//      children.add(statsPopup);
-        // Refresh output view
+
+        phantom.setFitHeight(getCurrentNodeDimension());
+        phantom.setFitWidth(getCurrentNodeDimension());
+        
     	isUpdating = false;
     }
 
-    private void updateLabels() {
+    private boolean isOutOfBounds(double visualCoord) {
+		return visualCoord > visualPlaneDimension;
+	}
+
+	private void updateLabels() {
     	radioButtonClicked(selectedRadioButton);
     	showNodeIds(isShowingNodeIds);
 	}
@@ -221,7 +269,9 @@ public class SMTContentView extends Group {
     	this.grid.setVisible(true);
 		double cellSize = calculateCellSizeForCellDimension(modelDiscreteCellSize);
 		
-		double numVHCells = visualPlaneDimension/cellSize;
+		double backgroundDimension = background.getFitWidth();
+		
+		double numVHCells = Math.floor(backgroundDimension/cellSize);
 		
 		GraphicsContext c = grid.getGraphicsContext2D();
 		c.clearRect(0, 0, visualPlaneDimension, visualPlaneDimension);
@@ -229,10 +279,10 @@ public class SMTContentView extends Group {
 //		c.moveTo(0, 0);
 //		c.lineTo(500, 500);
 		
-		for(int i = 0; i < numVHCells - 2; i++) {
+		for(int i = 0; i < numVHCells; i++) {
 			double p = (i+1)*cellSize;
-			c.strokeLine(0, p, visualPlaneDimension, p);			
-			c.strokeLine(p, 0, p, visualPlaneDimension);
+			c.strokeLine(0, p, backgroundDimension, p);			
+			c.strokeLine(p, 0, p, backgroundDimension);
 			}		
 		
     }
@@ -347,27 +397,74 @@ public class SMTContentView extends Group {
     void showStatsPopup(int senderId, double x, double y) {
     	if(isUpdating)
     		return;
+//    	
+//        double dx = 0;
+//        double dy = 0;
+//
+//        Point2D parentCoords = this.localToParent(x, y);
+//        double parentMidX = parent.getWidth()/2;
+//        double parentMidY = parent.getHeight()/2;
+//
+//        if(parentMidX - x < 0) // on the right side, move left
+//            dx = -1*statsPopup.getWidth() - getCurrentNodeDimension();
+//        else // x on left side, displace only by node dim
+//            dx = getCurrentNodeDimension();
+//
+//        if(parentMidY - y < 0) // y on the lower side, move up
+//            dy = -1*statsPopup.getHeight() - getCurrentNodeDimension();
+//        else // move down by node dim
+//            dy = getCurrentNodeDimension();
+
+//        statsPopup.relocate(x + dx, y + dy);
+    	Point2D correctPointAccordingToQuadrant = getCoordinateAccordingToCurrentQuadrant(new Point2D(x, y), 
+    			statsPopup.getWidth(), statsPopup.getHeight(), 1);
     	
-        double dx = 0;
-        double dy = 0;
-
-        Point2D parentCoords = this.localToParent(x, y);
-        double parentMidX = parent.getWidth()/2;
-        double parentMidY = parent.getHeight()/2;
-
-        if(parentMidX - x < 0) // on the right side, move left
-            dx = -1*statsPopup.getWidth() - getCurrentNodeDimension();
-        else // x on left side, displace only by node dim
-            dx = getCurrentNodeDimension();
-
-        if(parentMidY - y < 0) // y on the lower side, move up
-            dy = -1*statsPopup.getHeight() - getCurrentNodeDimension();
-        else // move down by node dim
-            dy = getCurrentNodeDimension();
-
-        statsPopup.relocate(x + dx, y + dy);
+    	statsPopup.relocate(correctPointAccordingToQuadrant.getX(), correctPointAccordingToQuadrant.getY());
         statsPopup.displayNode(tree.getNode(senderId));
         statsPopup.toFront();
+    }
+    
+    /**
+     *  Gets the coordinate, taking the current quadrant into account. This is
+     *  so that the control won't disappear to an area that's not visible
+     *  within the parent scroll pane.
+     * @param coords
+     *  	the current coordinates of the control that's going to be displayed
+     * @param controlWidth
+     *  	the height of the control that's going to be displayed
+     * @param controlHeight
+     *  	the width of the control that's going to be displayed
+     * @param scale
+     *  	the imaginary scale of the circle the control isn't allowed to touch, allows fine tuning
+     * @return
+     * 	 	a new visual coordinate ensuring the control will be "attached" to its circle,
+     *  	yet not fall outside of visual bounds within the parent scrollpane.
+     */
+    private Point2D getCoordinateAccordingToCurrentQuadrant(Point2D coords, 
+    		double controlWidth, double controlHeight, double scale) {
+        double x = coords.getX();
+        double y = coords.getY();
+    	
+    	double dx = 0;
+        double dy = 0;
+
+        Point2D parentCoords = this.localToParent(coords);
+        double parentMidX = parent.getWidth()/2;
+        double parentMidY = parent.getHeight()/2;
+        
+        double scaledNodeDimension = getCurrentNodeDimension()*scale;
+
+        if(parentMidX - x < 0) // on the right side, move left
+            dx = -1*controlWidth - scaledNodeDimension;
+        else // x on left side, displace only by node dim
+            dx = scaledNodeDimension;
+
+        if(parentMidY - y < 0) // y on the lower side, move up
+            dy = -1*controlHeight - scaledNodeDimension;
+        else // move down by node dim
+            dy = scaledNodeDimension;
+        
+        return coords.add(dx, dy);
     }
 
     /**
@@ -388,6 +485,23 @@ public class SMTContentView extends Group {
     }
 
     public void mouseOver(Point2D coordinate) {
+    	double d = getCurrentNodeDimension()/2;
+    	
+    	double modelX = transformCoordinateValueFromVisualToModel(coordinate.getX() - d),
+    		   modelY = transformCoordinateValueFromVisualToModel(coordinate.getY() - d);
+    	
+    	if(isInDiscreteMode) { 
+    		modelX = Mode.roundModelForDiscreteCellSize(modelX);
+    		modelY = Mode.roundModelForDiscreteCellSize(modelY);
+    	}
+    	
+    	coordinateLabel.setText("(" + utils.Math.trim(modelX) + ", " + utils.Math.trim(modelY) + ")");
+    	
+    	Point2D coordsAccordingToQuadrant = getCoordinateAccordingToCurrentQuadrant(coordinate, 
+    			this.coordinateLabel.getWidth(), this.coordinateLabel.getHeight(), 0.70);
+    	coordinateLabel.relocate(coordsAccordingToQuadrant.getX(), coordsAccordingToQuadrant.getY());
+    	coordinateLabel.toFront();
+    	
     	if(isUpdating)
     		return;
     	
@@ -397,7 +511,6 @@ public class SMTContentView extends Group {
             return;
         }
         if(phantom.isVisible()) { // if a link is being made don't show phantom...
-            double d = getCurrentNodeDimension()/2;
         	phantom.relocate(coordinate.getX() - d, coordinate.getY() - d); 
         }
     }
@@ -407,6 +520,10 @@ public class SMTContentView extends Group {
         double previousNodeScale = nodeScale;
         nodeScale = (1.0*percentage/100.0);
         double ratio = nodeScale/previousNodeScale;
+        
+        double scaledDim = visualPlaneDimension*percentage/100.0;
+        this.background.setFitWidth(scaledDim);
+        this.background.setFitHeight(scaledDim);
 
         
         for(Node n : getChildren())
@@ -444,8 +561,10 @@ public class SMTContentView extends Group {
                 view.setEndY(dy*ratio);
             }
         
-        drawGrid();
-
+        if(isInDiscreteMode)
+        	drawGrid();
+        
+        updateLabels();
     }
 
 
@@ -473,9 +592,33 @@ public class SMTContentView extends Group {
     		return;
     	selectedNode = null;
     }
+    
+private void mouseEnteredBackground() {
+    	System.out.println("ME BACKGROUND!");
+    }
+	
+	private void mouseExitedBackground() {
+		System.out.println("MEX BACKGROUND");
+	}
 
-    public void mouseClicked() { 
-    	if(isUpdating)
+
+	private boolean isParentLocationWithinBounds(double parentX, double parentY) {
+		Point2D localXY = this.parentToLocal(parentX, parentY);
+		
+		System.out.println("parentXY = " + parentX + ", " + parentY);
+		double localX = localXY.getX(),
+			   localY = localXY.getY();
+		System.out.println("localX Y = " + localX + ", " + localY);
+		double maxX = background.getFitWidth();
+		double maxY = background.getFitHeight();
+		
+		System.out.println("maxX = " + maxX + ", maxY = " + maxY);
+		
+		return localX >= 0 && localY >= 0 && localX <= maxX && localY <= maxY;
+	}
+
+    public void mouseClicked(MouseEvent e) { 
+    	if(isUpdating || !isParentLocationWithinBounds(e.getX(), e.getY()))
     		return;
     	
     	// If a node is placed and the tree is null, init a new tree
@@ -622,6 +765,11 @@ public class SMTContentView extends Group {
         background.toBack();
     }
 
+    /**
+     * Gets the current node dimension with the zoom accounted in. The currentNodeDimension itself would work
+     * only if zoom is at 100%.
+     * @return
+     */
     private double getCurrentNodeDimension() {
         return currentNodeDimension*nodeScale;
     }
@@ -949,6 +1097,22 @@ public class SMTContentView extends Group {
 	private double calculateCellSizeForCellDimension(int dimension) {
 //		return this.nodeScale*(visualBackgroundDimension/currentDimension)*dimension;
 		return this.nodeScale*visualPlaneDimension*dimension/referenceDimension;
+	}
+
+
+
+	public void referenceNodeDimensionDidChange(int newReferenceNodeDimension) {
+		this.referenceNodeDimension = newReferenceNodeDimension;
+		referenceNodeDimensionDidChange();
+	}
+
+	
+	public void referenceDimensionDidChange(int newReferenceDimension) {
+		System.out.println("old ref dimension = " + referenceDimension + ", old ref node dimension = " + this.referenceNodeDimension);
+		double ratio = newReferenceDimension/this.referenceDimension;
+		this.referenceDimension = newReferenceDimension;
+		double newReferenceNodeDimension = this.referenceNodeDimension*ratio;
+		referenceNodeDimensionDidChange((int)newReferenceDimension/50);
 	}
 
 

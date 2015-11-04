@@ -41,7 +41,7 @@ public class InputView extends Group {
 		editor.inputDidChange(value, this.type);
 	}
 	
-	private class NumericTextField extends TextField {
+	public class NumericTextField extends TextField {
 		
 		public NumericTextField(String prompt) {
 			this.setPromptText(prompt);

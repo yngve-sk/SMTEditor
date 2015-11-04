@@ -4,11 +4,14 @@ import java.io.File;
 
 import application_componentview.SMTComponentView;
 import application_controlsview.ControlsView;
+import application_controlsview.CustomButton;
 import application_controlsview.ControlsView.Buttons;
 import application_controlsview.ControlsView.CheckBoxes;
 import application_controlsview.ControlsView.RadioButtons;
 import application_controlsview.ControlsView.ToggleButtons;
 import application_outputview.InputView.InputViewType;
+import application_outputview.InputView.NumericTextField;
+import application_outputview.InputView;
 import application_outputview.TextOutputView;
 import application_outputview.TextOutputView.OutputFields;
 import application_smtview.SMTView;
@@ -18,11 +21,16 @@ import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
@@ -38,8 +46,28 @@ public class SMTEditor extends Scene {
     private SMTComponentView components; // displays components that can be dragged into editor
     private TextOutputView output; // displays stats for tree
     private ControlsView buttons; // displays buttons
+    
+    private Slider referenceNodeDimension;
+    private Label rNodeDimensionLabel;
 
+    private BoundedNumericTextField referenceDimension;
+    private CustomButton setReferenceDimension;
+    private Label rDimensionLabel;
+    
+    private Label coordinateOutput;
+    
     /* Layout in percentages, going through width-wise first */
+
+
+    private final double setReferenceDimensionLabelWidthRatio = 0.06, 
+			    		 setReferenceDimensionFieldWidthRatio = 0.14, 
+			    		 setReferenceDimensionButtonWidthRatio = 0.10;
+    
+	private final double nodeDimensionInputWidthRatio = 0.20;
+    private final double nodeDimensionSliderLabelWidthRatio = 0.10; // 10% of the slider space is occupied by the label
+    
+    private final double coordinateOutputWidthRatio = 0.20;
+    
     // Content width
     private final double horizontalEdgePaddingRatio = 0.04;
     private final double contentWidthRatio = 1 - 2*horizontalEdgePaddingRatio;
@@ -105,17 +133,48 @@ public class SMTEditor extends Scene {
         zoomLabel.setAlignment(Pos.BASELINE_CENTER);
         zoomLabel.setTextAlignment(TextAlignment.CENTER);
         
+        zoom.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> ov,
+                    Number old, Number newValue) {
+                    SMTEditor.this.zoomDidChange(newValue.intValue());
+                }
+            });
+        
         alpha = new Label(InputViewType.ALPHA.getString() + " = " + SharedMulticastTree.ALPHA_DEFAULT);
         kappa = new Label(InputViewType.KAPPA.getString() + " = " + SharedMulticastTree.KAPPA_DEFAULT);
         
         alpha.setStyle("-fx-font: 24 arial;");
         kappa.setStyle("-fx-font: 24 arial;");
 
-        zoom.valueProperty().addListener(new ChangeListener<Number>() {
+        referenceDimension = new BoundedNumericTextField(DefaultValues.REFERENCE_MIN_DIMENSION,   
+												         DefaultValues.DEFAULT_REFERENCE_DIMENSION,   
+												         DefaultValues.REFERENCE_MAX_DIMENSION,
+												         "enter dimension");
+        setReferenceDimension = new CustomButton("Set Dimension");
+        setReferenceDimension.setOnAction(event -> setReferenceDimension());
+        setReferenceDimension.setTooltip(new Tooltip("WARNING: It's possible "
+        		+ "to modify reference dimension during creation, but it should "
+        		+ "be done before. Nodes moving out of bounds due to a decrease/increase "
+        		+ "in dimension will be removed from the tree."));
+        rDimensionLabel = new Label("Reference Dimension:");
+        rDimensionLabel.setAlignment(Pos.BASELINE_CENTER);
+        rDimensionLabel.setContentDisplay(ContentDisplay.CENTER);
+        
+        referenceNodeDimension = new Slider();         
+        rNodeDimensionLabel = new Label("Ref. node dimension: " + DefaultValues.DEFAULT_REFERENCE_NODE_DIMENSION);
+        
+	    referenceNodeDimension.setMin(DefaultValues.DEFAULT_REFERENCE_NODE_MIN_DIMENSION);
+	    referenceNodeDimension.setMax(DefaultValues.DEFAULT_REFERENCE_NODE_MAX_DIMENSION);
+        referenceNodeDimension.setValue(  DefaultValues.DEFAULT_REFERENCE_NODE_DIMENSION);
+
+        coordinateOutput = new Label("cursor: (x, y)");
+        
+        referenceNodeDimension.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> ov,
-                    Number old_val, Number new_val) {
-                    SMTEditor.this.zoomDidChange(new_val.intValue());
+                    Number old, Number newValue) {
+                    SMTEditor.this.referenceNodeDimensionDidChange(newValue.intValue());
                 }
             });
 
@@ -157,9 +216,29 @@ public class SMTEditor extends Scene {
 
 		this.setFill(Color.BEIGE);
 
-        root.getChildren().addAll(editor, components, buttons, output, kappa, alpha, zoom, zoomLabel);
+        root.getChildren().addAll(editor, components, buttons, output, 
+        		kappa, alpha, zoom, zoomLabel, 
+        		referenceDimension, setReferenceDimension, rDimensionLabel, 
+        		referenceNodeDimension, rNodeDimensionLabel/*,
+        		coordinateOutput*/);
     }
     
+	private void setReferenceDimension() {
+		this.referenceDimensionDidChange(referenceDimension.getCurrentValue());
+	}
+
+	private void referenceDimensionDidChange(int newReferenceDimension) {
+	//	rDimensionLabel.setText("Ref. Dimension: " + newReferenceDimension);
+		referenceNodeDimension.setMax(newReferenceDimension/10);
+		referenceNodeDimension.setMin(newReferenceDimension/50);
+		editor.getContentView().referenceDimensionDidChange(newReferenceDimension);
+	}
+
+	private void referenceNodeDimensionDidChange(int newReferenceNodeDimension) {
+		rNodeDimensionLabel.setText("Ref. node dimension: " + newReferenceNodeDimension);
+		editor.getContentView().referenceNodeDimensionDidChange(newReferenceNodeDimension);
+}
+
 	private void drop(DragEvent event) {
 		Dragboard db = event.getDragboard();
 		
@@ -195,6 +274,26 @@ public class SMTEditor extends Scene {
      * @param height
      */
     private void layoutSubviews(double width, double height) {
+    	
+    	double dimensionInputY = verticalEdgePaddingRatio*height/4;
+    	double dimensionInputX = width/4;
+    	double dimensionInputHeight = verticalEdgePaddingRatio*height/2;
+    	
+    	double refDimensionLabelX = dimensionInputX - 60;
+    	double refDimensionLabelWidth = setReferenceDimensionLabelWidthRatio*width;
+    	double refDimensionFieldWidth = setReferenceDimensionFieldWidthRatio*width;
+    	double refDimensionButtonWidth = setReferenceDimensionButtonWidthRatio*width;
+    	double nodeDimensionInputWidth = nodeDimensionInputWidthRatio*width;
+    	double nodeDimensionSliderWidth = nodeDimensionInputWidth*(1 - nodeDimensionSliderLabelWidthRatio);
+    	double nodeDimensionLabelWidth = nodeDimensionInputWidth*nodeDimensionSliderLabelWidthRatio;
+    	
+    	double coordinateOutputX = refDimensionLabelX + refDimensionLabelWidth + nodeDimensionInputWidth;
+    	double coordinateOutputWidth = width*coordinateOutputWidthRatio;
+    	
+//    	double dimensionSlidersHeight = verticalEdgePaddingRatio*height/2;
+//    	double dimensionSlidersTotalWidth = width/4;
+//    	double dimensionSlidersLabelWidth = dimensionSlidersTotalWidth*dimensionSliderLabelWidthRatio;
+//    	double dimensionSlidersSliderWidth = dimensionSlidersTotalWidth*(1 - dimensionSliderLabelWidthRatio);
 
         double editorX = horizontalEdgePaddingRatio*width;
         double editorY = verticalEdgePaddingRatio*width;
@@ -241,6 +340,24 @@ public class SMTEditor extends Scene {
         zoomLabel.resizeRelocate(zoomX + zoomWidth*0.15, zoomY + zoomHeight, zoomWidth, zoomHeight);
         kappa.resizeRelocate(alphaKappaX, alphaKappaY, alphaKappaWidth, alphaKappaHeight);
         alpha.resizeRelocate(alphaKappaX, alphaY, alphaKappaWidth, alphaKappaHeight);
+        
+        referenceDimension.resizeRelocate(dimensionInputX + refDimensionLabelWidth, dimensionInputY, refDimensionFieldWidth, dimensionInputHeight);
+        setReferenceDimension.resizeRelocate(dimensionInputX + refDimensionFieldWidth, 
+        		dimensionInputY, refDimensionButtonWidth, dimensionInputHeight);
+        rDimensionLabel.resizeRelocate(refDimensionLabelX, dimensionInputY, // *1.75 just to make it fit right
+        		refDimensionLabelWidth, dimensionInputHeight);
+
+        referenceNodeDimension.resizeRelocate(dimensionInputX + refDimensionFieldWidth + refDimensionButtonWidth, dimensionInputY, 
+        		nodeDimensionSliderWidth, nodeDimensionSliderWidth);
+        rNodeDimensionLabel.resizeRelocate(dimensionInputX + refDimensionFieldWidth + refDimensionButtonWidth, 
+        		dimensionInputHeight + dimensionInputY, 
+        		nodeDimensionLabelWidth, 
+        		dimensionInputHeight);
+        
+        referenceDimension.setPrefWidth(refDimensionFieldWidth);
+        referenceNodeDimension.setPrefWidth(nodeDimensionSliderWidth);
+        
+        coordinateOutput.resizeRelocate(coordinateOutputX, dimensionInputY, coordinateOutputWidth, dimensionInputHeight);
     }
     
     public void updateOutput(SharedMulticastTree tree) {
@@ -250,15 +367,15 @@ public class SMTEditor extends Scene {
     }
 
 	public void buttonClicked(Buttons type) {
-		editor.buttonClicked(type);
+		editor.getContentView().buttonClicked(type);
 	}
 
 	public void fileWasDropped(File file) {
-		editor.fileWasDropped(file);
+		editor.getContentView().fileWasDropped(file);
 	}
 
 	public void saveButtonClicked() {
-		editor.saveButtonClicked();
+		editor.getContentView().saveButtonClicked();
 	}
 
 	public void saveTree(SharedMulticastTree tree) {
@@ -272,7 +389,7 @@ public class SMTEditor extends Scene {
 	}
 
 	public void inputDidChange(double value, InputViewType type) {
-		this.editor.inputDidChange(value, type);
+		this.editor.getContentView().inputDidChange(value, type);
 		
 		getLabelForType(type).setText(type.getString() + " = " + value);
 	}
@@ -287,21 +404,93 @@ public class SMTEditor extends Scene {
 	}
 
 	public void toggleButtonClicked(ToggleButtons type, boolean isSelected) {
-		this.editor.toggleButtonClicked(type, isSelected);
+		this.editor.getContentView().toggleButtonClicked(type, isSelected);
 	}
 
 	public void checkBoxClicked(CheckBoxes type, boolean isSelected) {
-		this.editor.checkBoxClicked(type, isSelected);
+		this.editor.getContentView().checkBoxClicked(type, isSelected);
 	}
 
 	public void radioButtonClicked(RadioButtons type) {
-		this.editor.radioButtonClicked(type);
+		this.editor.getContentView().radioButtonClicked(type);
 	}
 
 	public void cellSizeDidChange(int intValue) {
-		this.editor.cellSizeDidChange(intValue);
+		this.editor.getContentView().cellSizeDidChange(intValue);
 	}
 
 
+	/**
+	 * Adapted from NumericTextField
+	 * @author admin
+	 *
+	 */
+	private class BoundedNumericTextField extends TextField {
+		
+		private int min, max;
+		private int currentValue;
+		
+		public BoundedNumericTextField(int min, int init, int max, String prompt) {
+			super(Integer.toString(init));
+			this.setPromptText(prompt + " in range [" + min + ", " + max + "]");
+			this.min = min;
+			this.max = max;
+		}
+		
+		@Override
+		public void replaceText(int start, int end, String text) {
+		    String pre = getText(0, start),
+				   post = getText(end, this.getLength()),
+				   fullString = pre + text + post;
+		    
+		    if (!text.isEmpty() && isInteger(text)) 
+		        try {
+		            int val = Integer.parseInt(fullString); 
+		            
+		            if(val == currentValue) // ignore redundant zeros, i.e a "0" prepended to n should be ignored
+		            	return;
+		            
+		            if(val <= max) {
+		            	super.replaceText(start, end, text);
+		            	currentValue = val;
+		            	SMTEditor.this.setReferenceDimension.setDisable(false);
+		            }
+		            
+		            if(val < min) {
+		            	SMTEditor.this.setReferenceDimension.setDisable(true);
+		            }
+		            
+		            if(val > max) {
+		            	super.setText(Integer.toString(max));
+		            	currentValue = max;
+		            	SMTEditor.this.setReferenceDimension.setDisable(false);
+		            }
+		            
+//			        InputView.this.inputDidChange();
+		        } catch (NumberFormatException e) {
+		        	// do nothing
+		        }
 
+		    if (text.isEmpty()) {
+		        super.replaceText(start, end, text);
+		    }
+		}
+
+		/**
+		 * Checks if every char in a string is a digit, i.e if it's an int
+		 * @param text
+		 * @return
+		 */
+		private boolean isInteger(String text) {
+			for(char c : text.toCharArray())
+				if(!Character.isDigit(c))
+					return false;
+			return true;
+		}
+		
+		int getCurrentValue() {
+			return this.currentValue;
+		}
+
+	} 
 }

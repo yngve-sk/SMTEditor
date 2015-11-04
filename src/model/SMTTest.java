@@ -2,6 +2,10 @@ package model;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
 import org.junit.Test;
 
 import utils.Dictionary;
@@ -140,7 +144,13 @@ public class SMTTest {
 	 */
 	@Test
 	public void testCalculateTotalCost() {
-		//TODO
+		for(TestData data : TestData.values()) {
+			SMTParser.parseFromFile(new File(data.getFilePath()));
+			assertTrue("Unsuccessful parsing", SMTParser.didParseSuccessfully());
+			SharedMulticastTree tree = SMTParser.getCachedTree();
+			int costApprox = (int) Math.round(tree.getCost());
+			assertEquals(data.getCorrectCost(), costApprox);
+		}
 	}
 	
 	/**

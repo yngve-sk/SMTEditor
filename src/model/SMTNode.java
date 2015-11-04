@@ -93,44 +93,6 @@ public abstract class SMTNode {
 
 
 
-	private int roundModelForDiscreteCellSize(double coord) {
-		int cellSize = Mode.getDiscreteCellSize();
-		
-		int intCoord = (int) coord;
-		
-		if(intCoord%cellSize < cellSize/2 || (intCoord >= Mode.defaultDimension - cellSize/2)) { // round down
-			return intCoord - (intCoord%cellSize);
-		}
-		else if(intCoord < cellSize) { // Round up so it's "in" in the grid
-			return cellSize; 
-		}
-		else { // round up if it's "past" the mid point
-			return intCoord - (intCoord%cellSize) + cellSize;
-		}
-	}
-
-	private double roundVisualForDiscreteCellSize(double coord) {
-		int cellSize = Mode.getDiscreteCellSize();
-		
-		System.out.println("actual coord : " + coord + ", round visual, cellSize = " + cellSize);
-		
-		double lowerOption = coord - (coord % cellSize);
-		double higherOption = lowerOption + cellSize;
-		double d = cellSize*0.5;
-		
-		System.out.println("lower : " + lowerOption + ", higher : " + higherOption);
-		
-		if(coord%cellSize == 0)
-			return coord + d;
-		else if(coord - lowerOption < higherOption - coord) {
-			System.out.println("returning lowerOption + d = " + (lowerOption + d));
-			return lowerOption + d;
-		} 
-		else {
-			System.out.println("returning higherOption + d = " + (higherOption + d));
-			return higherOption + d;
-		}
-	}
 
 	/**
 	 *
@@ -138,7 +100,7 @@ public abstract class SMTNode {
 	 *     a string representation of the nodes position in form (x,y)
 	 */
 	public String getPosition() {
-	    return Mode.isInDiscreteMode() ? "(" + roundModelForDiscreteCellSize(x) + ", " + roundModelForDiscreteCellSize(y) + ")" : 
+	    return Mode.isInDiscreteMode() ? "(" + Mode.roundModelForDiscreteCellSize(x) + ", " + Mode.roundModelForDiscreteCellSize(y) + ")" : 
 	    	"(" + utils.Math.trim(x) + ", " + utils.Math.trim(y) + ")";
 	}
 
@@ -196,7 +158,7 @@ public abstract class SMTNode {
 	 * @return
 	 */
 	public double getVisualX() {
-        return Mode.isInDiscreteMode() ? roundVisualForDiscreteCellSize(x) : x;
+        return Mode.isInDiscreteMode() ? Mode.roundVisualForDiscreteCellSize(x) : x;
 	}
 	
 	/**
@@ -205,7 +167,7 @@ public abstract class SMTNode {
 	 * @return
 	 */
 	public double getVisualY() {
-        return Mode.isInDiscreteMode() ? roundVisualForDiscreteCellSize(y) : y;
+        return Mode.isInDiscreteMode() ? Mode.roundVisualForDiscreteCellSize(y) : y;
 	}
 
 	/**
@@ -213,7 +175,7 @@ public abstract class SMTNode {
 	 * @return
 	 */
     public double getX() {
-        return Mode.isInDiscreteMode() ? roundModelForDiscreteCellSize(x) : x;
+        return Mode.isInDiscreteMode() ? Mode.roundModelForDiscreteCellSize(x) : x;
     }
 
     public void setX(double x) {
@@ -225,7 +187,7 @@ public abstract class SMTNode {
 	 * @return
 	 */
     public double getY() {
-        return Mode.isInDiscreteMode() ? roundModelForDiscreteCellSize(y) : y;
+        return Mode.isInDiscreteMode() ? Mode.roundModelForDiscreteCellSize(y) : y;
     }
 
     public void setY(double y) {
@@ -344,8 +306,11 @@ public abstract class SMTNode {
 	    this.nodeCost = nodeCost;
 	}
 
-
-
+	
+	@Override
+	public String toString() {
+		return "SMTNode " + id + " at(" + x + ", " + y + ")" + " nCost : " + nodeCost + ", highest p level: " + highestPowerLevel + ", lowest p level : " + lowestPowerLevel;
+	}
 	
 
 
