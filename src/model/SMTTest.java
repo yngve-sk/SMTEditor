@@ -2,9 +2,11 @@ package model;
 
 import static org.junit.Assert.*;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.Scanner;
 
 import org.junit.Test;
 
@@ -135,7 +137,25 @@ public class SMTTest {
 	 */
 	@Test
 	public void testCalculateNodeCost() {
-		//TODO
+		TestData data = TestData.One;
+		SMTParser.parseFromFile(new File(data.getFilePath()));
+		SharedMulticastTree tree = SMTParser.getCachedTree();
+		double[] expectedValues = new double[6];
+		
+		try {
+			Scanner reader = new Scanner(new File("src/smt_data/10500-nodes"));
+			String str = reader.nextLine();
+			reader.close();
+			String[] strValues = str.split(",");
+			for(int i = 0; i < expectedValues.length; i++)
+				expectedValues[i] = Double.parseDouble(strValues[i]);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		for(int i = 0; i < expectedValues.length; i++)
+			assertEquals(expectedValues[i], tree.getNode(i).getNodeCost(), 0);
 	}
 	
 	/**

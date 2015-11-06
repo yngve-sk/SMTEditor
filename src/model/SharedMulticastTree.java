@@ -698,9 +698,9 @@ public class SharedMulticastTree {
 				SMTLinkKey linkKey = new SMTLinkKey(n.id, n.getMostDistant());
 				if(!( !n.isDestination && n.isLeaf() )) { // if n isn't a non-destination leaf
 					double nCost = n.getCost(nod, distinctLinks.get(linkKey));  // pass link with subtree info to node
-					System.out.println("myCost = " + myCost + "\nAdding cost of node " + n.toString());
+//					System.out.println("myCost = " + myCost + "\nAdding cost of node " + n.toString());
 					myCost += nCost;
-					System.out.println("myCost after add = " + myCost);
+//					System.out.println("myCost after add = " + myCost);
 				}
 			}
 		
@@ -717,22 +717,39 @@ public class SharedMulticastTree {
 				n.setNodeCost(myCost);
 	}
 
-
+	/**
+	 * Sets the link direction to the same direction as the link key,
+	 * used for avoiding errors with link direction when storing subtree sizes in links.
+	 * @param key
+	 *  	the link key
+	 */
+	private void alignLinkWithKey(SMTLinkKey key) {
+		SMTLink link = distinctLinks.get(key);
+		if(link.id1 != key.id1) {
+			distinctLinks.remove(key);
+			distinctLinks.put(key, new SMTLink(key.id1, key.id2));
+		}
+	}
 
 	private int calculateSubtrees(SMTLinkKey linkKey, int nod) {
+		alignLinkWithKey(linkKey);
 		SMTLink link = distinctLinks.get(linkKey);
 		int id1 = linkKey.id1;
 		int id2 = linkKey.id2;
 		
+		
 		SMTNode n2 = nodes.get(id2);
 		
 		int subtreeSize = 0;
-		if(n2.isDestination)
+		if(n2.isDestination) 
 			subtreeSize = 1;
 		
+
 		if(n2.getNeighboursWithinRange().size() == 1) {
 			link.setOppositeSubtreeSize(subtreeSize); 
 			link.setSubtreeSize(nod - subtreeSize);
+//			System.out.println("Calculating subtrees for " + link);
+//			System.out.println("(nod = " + nod + ")" + "With link direction: " + subtreeSize + ", opposite: " + (nod - subtreeSize));
 			return subtreeSize;
 		}
 		
@@ -740,6 +757,8 @@ public class SharedMulticastTree {
 			if((i != id1)) 
 				subtreeSize += calculateSubtrees(new SMTLinkKey(id2, i), nod);
 			
+//		System.out.println("Calculating subtrees for " + link);
+//		System.out.println("(nod = " + nod + ")" + "With link direction: " + subtreeSize + ", opposite: " + (nod - subtreeSize));
 		link.setOppositeSubtreeSize(subtreeSize);
 		link.setSubtreeSize(nod - subtreeSize);
 		

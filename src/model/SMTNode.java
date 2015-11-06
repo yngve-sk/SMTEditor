@@ -292,7 +292,13 @@ public abstract class SMTNode {
 		int subtreeSize = j1.getSubtreeSize(this.id); // passing in this.id,
 		// if this.id is the id1 (start) of link, then it gets the subtree size, else it gets the "opposite" subtree size
 		
+//		System.out.println("Node " + this.id);
+//		System.out.println("this.nodeCost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();");
+//		System.out.println("this.nodeCost = " + subtreeSize + "*" + getHighestPowerLevel() + "+ (" + nod + "-" + subtreeSize + ")*" + getSecondHighestPowerLevel() + ";");
+		
 		this.nodeCost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
+//		System.out.println("= " + this.nodeCost);
+		
 		return this.nodeCost;
 	}
 	

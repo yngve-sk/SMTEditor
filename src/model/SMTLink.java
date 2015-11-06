@@ -20,11 +20,23 @@ public class SMTLink {
 		return -1;
 	}
 
+	public void setSubtreeSizes(int originId, int id1ToId2, int id2ToId1) {
+		if(originId == id1) {
+			setSubtreeSize(id1ToId2);
+			setOppositeSubtreeSize(id2ToId1);
+		}
+		else {
+			setSubtreeSize(id2ToId1);
+			setOppositeSubtreeSize(id1ToId2);
+		}
+	}
+	
 	/**
 	 * Sets subtree size id1->id2
 	 * @param subtreeSize
 	 */
 	public void setSubtreeSize(int subtreeSize) {
+//		System.out.println("subtree size " + id1 + " -> " + id2 + " = " + oppositeSubtreeSize);
 		this.subtreeSize = subtreeSize;
 	}
 
@@ -34,6 +46,7 @@ public class SMTLink {
 	 * @param subtreeSize
 	 */
 	public void setOppositeSubtreeSize(int oppositeSubtreeSize) {
+//		System.out.println("subtree size " + id2 + " -> " + id1 + " = " + oppositeSubtreeSize);
 		this.oppositeSubtreeSize = oppositeSubtreeSize;
 	}
 
