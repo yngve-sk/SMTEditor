@@ -1,8 +1,8 @@
-package application_outputview;
+package application_stats_save_view;
 
 import application.SMTEditor;
 import application_componentview.Components;
-import application_outputview.InputView.InputViewType;
+import application_stats_save_view.InputView.InputViewType;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -10,17 +10,22 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
-public class TextOutputView extends Group {
+/**
+ * Displays output stats, and the save button
+ * @author Yngve Sekse Kristiansen
+ *
+ */
+public class StatsAndSaveView extends Group {
 	
 	private VBox left;
-	private OutputField avgNodeCost,
+	private StatsOutputField avgNodeCost,
 					    avgLinkLength,
 					    mostExpensiveNode,
 					    longestLink,
 					    totalTreeCost;
 	
 	private VBox middle;
-	private OutputField numNodes,
+	private StatsOutputField numNodes,
 						numLinks,
 						numDestinations,
 						numNonDestinations,
@@ -34,21 +39,21 @@ public class TextOutputView extends Group {
 	private Button save; // save
 	
 	
-	public TextOutputView() {
+	public StatsAndSaveView() {
 		left = new VBox();
-		avgNodeCost = new OutputField(genericNodePath, "Avg node cost");
-		avgLinkLength = new OutputField(Components.LINK.getImagePath(), "Avg link length");
-		mostExpensiveNode = new OutputField(genericNodePath, "Most expensive");
-		longestLink = new OutputField(Components.LINK.getImagePath(), "Longest link");
-		totalTreeCost = new OutputField(treeExamplePath, "Total cost");
+		avgNodeCost = new StatsOutputField(genericNodePath, "Avg node cost");
+		avgLinkLength = new StatsOutputField(Components.LINK.getImagePath(), "Avg link length");
+		mostExpensiveNode = new StatsOutputField(genericNodePath, "Most expensive");
+		longestLink = new StatsOutputField(Components.LINK.getImagePath(), "Longest link");
+		totalTreeCost = new StatsOutputField(treeExamplePath, "Total cost");
 		left.getChildren().addAll(avgNodeCost, avgLinkLength, mostExpensiveNode, longestLink, totalTreeCost);
 		
 		middle = new VBox();
-		numNodes = new OutputField(genericNodePath, "#Nodes");
-		numLinks = new OutputField(treeExamplePath, "#Links");
-		numDestinations = new OutputField(Components.DESTINATION.getImagePath(), "#Dest");
-		numNonDestinations = new OutputField(Components.NONDESTINATION.getImagePath(), "#Non-Dest");
-		calculationTime = new OutputField(clockPath, "Calc time");
+		numNodes = new StatsOutputField(genericNodePath, "#Nodes");
+		numLinks = new StatsOutputField(treeExamplePath, "#Links");
+		numDestinations = new StatsOutputField(Components.DESTINATION.getImagePath(), "#Dest");
+		numNonDestinations = new StatsOutputField(Components.NONDESTINATION.getImagePath(), "#Non-Dest");
+		calculationTime = new StatsOutputField(clockPath, "Calc time");
 		middle.getChildren().addAll(numNodes, numLinks, numDestinations, numNonDestinations, calculationTime);
 				
 		kappa = new InputView(InputViewType.KAPPA);
@@ -79,7 +84,7 @@ public class TextOutputView extends Group {
 		VBox[] bothVBoxes = {left, middle};
 		for(VBox v : bothVBoxes) {
 			for(Node n : v.getChildren()) {
-				OutputField field = (OutputField) n;
+				StatsOutputField field = (StatsOutputField) n;
 				field.resize(outputFieldWidth, outputFieldHeight);
 			}
 		}
@@ -118,7 +123,7 @@ public class TextOutputView extends Group {
 	 * @return
 	 *  	the corresponding field type
 	 */
-	private OutputField fieldWithType(OutputFields field) {
+	private StatsOutputField fieldWithType(OutputFields field) {
 		switch(field) {
 		case AVG_NODE_COST : return avgNodeCost;
 		case AVG_LINK_LENGTH : return avgLinkLength;

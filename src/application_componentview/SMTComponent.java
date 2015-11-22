@@ -7,6 +7,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 
+/**
+ * Graphically displays one component
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class SMTComponent extends Group {
 
     private ImageView icon;
@@ -22,6 +27,11 @@ public class SMTComponent extends Group {
     private final double SELECTED_OPACITY = 1;
     private final double NOT_SELECTED_OPACITY = 0.4;
 
+    /**
+     * Displays a SMTComponent, 
+     * @param type
+     *  	the component type (must be defined in Components.java
+     */
     public SMTComponent(Components type) {
         icon = new ImageView(new Image(type.getImagePath()));
         text = new Label(type.getDescription());

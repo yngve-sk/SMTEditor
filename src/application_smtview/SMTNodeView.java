@@ -12,7 +12,7 @@ import javafx.scene.input.MouseEvent;
 import model.SMTLink;
 
 /**
- * Represents a generic node view
+ * Represents a generic node view, to be extended by DestinationView and NonDestinationView
  * @author Yngve Sekse Kristiansen
  *
  */
@@ -20,6 +20,8 @@ public abstract class SMTNodeView extends ImageView {
 
     private int nodeId;
 
+    // if this id is 1, and a links.get(2) returns true, that means
+    // this is the graphical START point of the link from 1 to 2
     private HashMap<Integer, Boolean> links;
 
     public SMTNodeView(double x, double y, double dimension, String imagePath, int nodeId) {
@@ -56,6 +58,10 @@ public abstract class SMTNodeView extends ImageView {
             links.add(new SMTLink(nodeId, id));
 
         return links;
+    }
+    
+    boolean isLinkedTo(int id) {
+    	return this.links.keySet().contains(id);
     }
 
     private List<SMTLinkView> getAllLinkViews() {

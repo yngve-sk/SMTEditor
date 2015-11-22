@@ -39,9 +39,6 @@ public class SMTParser {
      *      the tree
      */
     public static void parseFromFile(File file) {
-    	System.out.println("is file null? can read???");
-    	System.out.println(file.exists());
-    	System.out.println(file.getAbsolutePath());
         readFile(file);
         if(didParseSuccessfully)
         	cacheIsEmpty = false;
@@ -89,7 +86,6 @@ public class SMTParser {
      */
     private static void readFile(File file) throws IllegalArgumentException{
         try {
-        	System.out.println(file.getTotalSpace());
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line;
 

@@ -6,6 +6,11 @@ import java.io.FileReader;
 
 import application_componentview.Components;
 
+/**
+ * Contains some test data, four trees, along with their correct costs
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public enum TestData {
 	One(10500),
 	Two(11750),

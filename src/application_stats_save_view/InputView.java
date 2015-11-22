@@ -1,10 +1,15 @@
-package application_outputview;
+package application_stats_save_view;
 
 import application.SMTEditor;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 
+/**
+ * Represents a view taking in input, used for kappa and alpha
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class InputView extends Group {
 
 	private Label variableName;
@@ -36,11 +41,16 @@ public class InputView extends Group {
 	
 	private void inputDidChange() {
 		double value = input.getText().isEmpty() ? 0 : Double.parseDouble(input.getText());
-		System.out.println("Input changed to " + value + " ...!");
+//		System.out.println("Input changed to " + value + " ...!");
 		SMTEditor editor = (SMTEditor) getScene();
 		editor.inputDidChange(value, this.type);
 	}
 	
+	/**
+	 * Accepts only doubles
+	 * @author Yngve Sekse Kristiansen
+	 *
+	 */
 	public class NumericTextField extends TextField {
 		
 		public NumericTextField(String prompt) {

@@ -1,4 +1,4 @@
-package application_outputview;
+package application_stats_save_view;
 
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -6,14 +6,21 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class OutputField extends Group {
+/**
+ * Displays an attribute of the tree.
+ * Contains the following:
+ * A description, an image, and a textfield to display the current value
+ * @author Yngve Sekse Kristiansen
+ *
+ */
+public class StatsOutputField extends Group {
 
 	private ImageView icon;
 	private Label textOutput;
 	
 	private final String labelText;
 	
-	public OutputField(String imagePath, String labelText) {
+	public StatsOutputField(String imagePath, String labelText) {
 		super();
 		
 		icon = new ImageView(new Image(imagePath));

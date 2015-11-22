@@ -1,5 +1,10 @@
 package utils;
 
+/**
+ * Help methods 
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class Math {
 
 	/**

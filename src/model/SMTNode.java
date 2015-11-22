@@ -3,6 +3,11 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Contains all node logic
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public abstract class SMTNode {
 
     private int sortingId; // Used when finding subtree
@@ -213,6 +218,13 @@ public abstract class SMTNode {
         neighborsWithinRange.add(neighborId);
         updateLinks();
     }
+    
+	public void removeNeighbors(List<Integer> neighbors) {
+		for(Integer id : neighbors)
+			neighborsWithinRange.remove(id);
+		
+		updateLinks();
+	}
 
     /**
      * Removes a neighbor from the node
@@ -290,14 +302,8 @@ public abstract class SMTNode {
 		}
 						
 		int subtreeSize = j1.getSubtreeSize(this.id); // passing in this.id,
-		// if this.id is the id1 (start) of link, then it gets the subtree size, else it gets the "opposite" subtree size
-		
-//		System.out.println("Node " + this.id);
-//		System.out.println("this.nodeCost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();");
-//		System.out.println("this.nodeCost = " + subtreeSize + "*" + getHighestPowerLevel() + "+ (" + nod + "-" + subtreeSize + ")*" + getSecondHighestPowerLevel() + ";");
 		
 		this.nodeCost = subtreeSize*getHighestPowerLevel() + (nod - subtreeSize)*getSecondHighestPowerLevel();
-//		System.out.println("= " + this.nodeCost);
 		
 		return this.nodeCost;
 	}
@@ -317,6 +323,8 @@ public abstract class SMTNode {
 	public String toString() {
 		return "SMTNode " + id + " at(" + x + ", " + y + ")" + " nCost : " + nodeCost + ", highest p level: " + highestPowerLevel + ", lowest p level : " + lowestPowerLevel;
 	}
+
+
 	
 
 

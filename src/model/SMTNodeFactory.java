@@ -3,6 +3,11 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Small factory class for SMTNodes, synchronizing the id's with the IdTracker class.
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class SMTNodeFactory {
 
     public static SMTNode newNode(double x, double y, boolean isDestination) {

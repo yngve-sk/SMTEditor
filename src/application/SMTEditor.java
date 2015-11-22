@@ -9,12 +9,12 @@ import application_controlsview.ControlsView.Buttons;
 import application_controlsview.ControlsView.CheckBoxes;
 import application_controlsview.ControlsView.RadioButtons;
 import application_controlsview.ControlsView.ToggleButtons;
-import application_outputview.InputView.InputViewType;
-import application_outputview.InputView.NumericTextField;
-import application_outputview.InputView;
-import application_outputview.TextOutputView;
-import application_outputview.TextOutputView.OutputFields;
 import application_smtview.SMTView;
+import application_stats_save_view.InputView;
+import application_stats_save_view.StatsAndSaveView;
+import application_stats_save_view.InputView.InputViewType;
+import application_stats_save_view.InputView.NumericTextField;
+import application_stats_save_view.StatsAndSaveView.OutputFields;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
@@ -40,11 +40,17 @@ import model.SharedMulticastTree;
 
 @SuppressWarnings("unused")
 
+/**
+ * Main "window", this contains all the components of the SMTEditor,
+ * and is also the middle man for communication between these components.
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class SMTEditor extends Scene {
 
     private SMTView editor; // displays the tree itself
     private SMTComponentView components; // displays components that can be dragged into editor
-    private TextOutputView output; // displays stats for tree
+    private StatsAndSaveView output; // displays stats for tree
     private ControlsView buttons; // displays buttons
     
     private Slider referenceNodeDimension;
@@ -122,7 +128,7 @@ public class SMTEditor extends Scene {
         editor = new SMTView();
         components = new SMTComponentView(editor);
         buttons = new ControlsView();
-        output = new TextOutputView();
+        output = new StatsAndSaveView();
 
         zoom = new Slider();
         zoom.setMin(10);
@@ -215,7 +221,11 @@ public class SMTEditor extends Scene {
 		this.setOnDragDropped(event -> drop(event));
 
 		this.setFill(Color.BEIGE);
-
+		
+		zoomLabel.setMouseTransparent(true);
+		alpha.setMouseTransparent(true);
+		kappa.setMouseTransparent(true);
+		
         root.getChildren().addAll(editor, components, buttons, output, 
         		kappa, alpha, zoom, zoomLabel, 
         		referenceDimension, setReferenceDimension, rDimensionLabel, 
@@ -361,7 +371,7 @@ public class SMTEditor extends Scene {
     }
     
     public void updateOutput(SharedMulticastTree tree) {
-    	for(OutputFields f : TextOutputView.OutputFields.values()) {    		
+    	for(OutputFields f : StatsAndSaveView.OutputFields.values()) {    		
     		output.updateFieldWithNewValue(f, tree.getValueForField(f));
     	}
     }

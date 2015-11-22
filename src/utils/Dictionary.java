@@ -5,6 +5,13 @@ import java.util.List;
 
 import model.SMTLink;
 
+/**
+ * Simply dictionary. Used for links since hashing didn't take into account a->b === b-> a.
+ * @author Yngve Sekse Kristiansen
+ *
+ * @param <K>
+ * @param <V>
+ */
 public class Dictionary<K, V> {
 
     private ArrayList<K> keys;

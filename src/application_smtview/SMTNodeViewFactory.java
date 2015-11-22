@@ -4,7 +4,7 @@ import javafx.geometry.Point2D;
 
 
 /**
- * Small factory to produce node views
+ * Small factory to produce node views, all constructor calls should be done through this
  * @author Yngve Sekse Kristiansen
  *
  */

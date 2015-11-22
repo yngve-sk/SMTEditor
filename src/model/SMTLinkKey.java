@@ -1,5 +1,11 @@
 package model;
 
+/**
+ * Represents a link key. Contains a minimal amount of information, and also takes into
+ * account the symmetric nature of links. I.e a->b === b->a. Used to avoid overlapping
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class SMTLinkKey {
 	
 	public int id1, id2;

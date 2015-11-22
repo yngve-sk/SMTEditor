@@ -15,10 +15,10 @@ import application_controlsview.ControlsView.Buttons;
 import application_controlsview.ControlsView.CheckBoxes;
 import application_controlsview.ControlsView.RadioButtons;
 import application_controlsview.ControlsView.ToggleButtons;
-import application_outputview.InputView.InputViewType;
+import application_stats_save_view.InputView.InputViewType;
 
 /**
- * Contains the SMTContentView
+ * Contains the SMTContentView. This is the ScrollPane encasing it.
  * @author Yngve Sekse Kristiansen
  *
  */

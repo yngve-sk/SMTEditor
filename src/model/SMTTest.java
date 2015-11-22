@@ -12,6 +12,11 @@ import org.junit.Test;
 
 import utils.Dictionary;
 
+/**
+ * Test class, tests a few central properties for the model object, including parsing
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class SMTTest {
 
 	/**

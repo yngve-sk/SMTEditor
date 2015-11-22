@@ -15,6 +15,11 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
 
+/**
+ * View responsible for displaying all controls directly manipulating the SMT
+ * @author Yngve Sekse Kristiansen
+ *
+ */
 public class ControlsView extends Group{
 
 	
@@ -38,6 +43,9 @@ public class ControlsView extends Group{
 	
 	final double p = 5; // padding
 
+	/**
+	 * Initalizes the controls view
+	 */
     public ControlsView() {
     	super();
        
@@ -90,8 +98,6 @@ public class ControlsView extends Group{
         removeAllLinks.setOnMouseClicked(event -> buttonClicked(Buttons.REMOVE_LINKS));    
     }
     
-
-
     protected void cellSizeDidChange(int intValue) {
 		String newText = "Discrete mode cell size : " + intValue;
 		cellSizeLabel.setText(newText);	

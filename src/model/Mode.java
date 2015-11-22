@@ -2,7 +2,7 @@ package model;
 
 /**
  * Keeps track of which "mode" the editor is in, this would be made into an enum tracker
- * if more modes were added
+ * if more modes were added. Conversions from non-discrete to discrete coordinates are done here.
  * @author Yngve Sekse Kristiansen
  *
  */
